@@ -114,21 +114,7 @@
       </div>
     </div>
 
-    <div id="modalPicker" class="modal" aria-hidden="true" role="dialog" aria-label="Seleziona orario">
-      <div class="modal-inner narrow">
-        <div class="picker">
-          <select id="pickHour" size="5" class="wheel"></select>
-          <span class="colon">:</span>
-          <select id="pickMin" size="5" class="wheel"></select>
-        </div>
-        <div class="modal-actions wrap">
-          <button id="btnPickerOk" class="btn">Correggi</button>
-          <button id="btnPickerCancel" class="btn outline">Annulla</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="modalDay" class="modal" aria-hidden="true" role="dialog" aria-label="Dettaglio giornata">
+    <div id="modalDay" class="modal z110" aria-hidden="true" role="dialog" aria-label="Dettaglio giornata">
       <div class="modal-inner">
         <h3 id="dayTitle">Giornata</h3>
         <div class="rows" id="dayRows"></div>
@@ -138,11 +124,26 @@
       </div>
     </div>
 
-    <div id="modalMonth" class="modal" aria-hidden="true" role="dialog" aria-label="Seleziona mese">
+    <div id="modalPicker" class="modal z120" aria-hidden="true" role="dialog" aria-label="Seleziona orario">
+      <div class="modal-inner narrow">
+        <div class="readout" id="pickerReadout">00:00</div>
+        <div class="picker">
+          <div class="wheel-wrap"><select id="pickHour" size="5" class="wheel"></select></div>
+          <span class="colon">:</span>
+          <div class="wheel-wrap"><select id="pickMin" size="5" class="wheel"></select></div>
+        </div>
+        <div class="modal-actions wrap">
+          <button id="btnPickerOk" class="btn">Correggi</button>
+          <button id="btnPickerCancel" class="btn outline">Annulla</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modalMonth" class="modal z120" aria-hidden="true" role="dialog" aria-label="Seleziona mese">
       <div class="modal-inner narrow">
         <h3>Seleziona mese</h3>
         <div class="picker">
-          <select id="pickMonth" size="5" class="wheel wide"></select>
+          <div class="wheel-wrap"><select id="pickMonth" size="5" class="wheel wide"></select></div>
         </div>
         <div class="modal-actions wrap">
           <button id="btnMonthOk" class="btn">Conferma</button>
@@ -151,7 +152,7 @@
       </div>
     </div>
 
-    <div id="modalMonthResult" class="modal" aria-hidden="true" role="dialog" aria-label="Totale mese selezionato">
+    <div id="modalMonthResult" class="modal z120" aria-hidden="true" role="dialog" aria-label="Totale mese selezionato">
       <div class="modal-inner">
         <h3 id="monthResultTitle">Totale mese</h3>
         <div class="center"><div id="monthResultValue" class="big-circle small">—</div></div>
@@ -162,12 +163,12 @@
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); });
-      }
-    </script>
   </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); });
+    }
+  </script>
 </body>
 </html>
