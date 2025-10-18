@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Straordinari</title>
+  <meta name="theme-color" content="#34C759" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="tabs" role="tablist" aria-label="Sezioni">
+      <button class="tab active" data-target="page-main" role="tab" aria-selected="true">Pagina principale</button>
+      <button class="tab" data-target="page-recenti" role="tab" aria-selected="false">Orari recenti</button>
+      <button class="tab" data-target="page-totale" role="tab" aria-selected="false">Totale mensile</button>
+    </header>
+
+    <main>
+      <!-- Pagina principale -->
+      <section id="page-main" class="page visible" aria-labelledby="Pagina principale">
+        <div class="hero">
+          <button id="btnRegistra" class="btn-record" aria-label="Registra ora corrente">
+            <span>Registra</span>
+          </button>
+          <div class="selector">
+            <label for="azione">Voce da registrare</label>
+            <select id="azione">
+              <option value="breakStart">Inizio pausa</option>
+              <option value="breakEnd">Fine pausa</option>
+              <option value="end">Uscita</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Dati di oggi</h2>
+          <div class="rows" id="rowsOggi">
+            <div class="row">
+              <div>Inizio lavoro</div>
+              <div class="time" id="startTime">08:00</div>
+              <button class="btn ghost" data-edit="start">Modifica</button>
+            </div>
+            <div class="row">
+              <div>Inizio pausa</div>
+              <div class="time" id="breakStartTime">—</div>
+              <button class="btn ghost" data-edit="breakStart">Modifica</button>
+            </div>
+            <div class="row">
+              <div>Fine pausa</div>
+              <div class="time" id="breakEndTime">—</div>
+              <button class="btn ghost" data-edit="breakEnd">Modifica</button>
+            </div>
+            <div class="row">
+              <div>Uscita</div>
+              <div class="time" id="endTime">—</div>
+              <button class="btn ghost" data-edit="end">Modifica</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="oggiSummary" hidden>
+          <h2>Stima di oggi</h2>
+          <p id="oggiNet"></p>
+          <p id="oggiExtra"></p>
+        </div>
+      </section>
+
+      <!-- Pagina 2: Orari recenti -->
+      <section id="page-recenti" class="page" aria-labelledby="Orari recenti">
+        <div class="banner" id="recentiBanner" hidden>
+          Questa sezione usa i dati archiviati in cloud. Connettiti e configura il sync in <b>Altro → Cloud sync</b>.
+        </div>
+        <div class="card">
+          <h2>Mese corrente</h2>
+          <div id="recentiList" class="list"></div>
+        </div>
+      </section>
+
+      <!-- Pagina 3: Totale mensile -->
+      <section id="page-totale" class="page" aria-labelledby="Totale mensile">
+        <div class="banner" id="totaleBanner" hidden>
+          Questa sezione può usare i dati del cloud per il totale. Connettiti e configura il sync in <b>Altro → Cloud sync</b>.
+        </div>
+        <div class="center">
+          <div id="bigTotal" class="big-circle">—</div>
+        </div>
+        <div class="center">
+          <button id="btnVerificaMesi" class="btn">Verifica mesi precedenti</button>
+        </div>
+      </section>
+
+      <!-- Pagina Altro (config & backup) -->
+      <section id="page-altro" class="page" aria-labelledby="Altro" hidden>
+        <!-- Non più in tab: mantenuto per retrocompatibilità -->
+      </section>
+    </main>
+
+    <!-- Modal: Picker ora/min -->
+    <div id="modalPicker" class="modal" aria-hidden="true" role="dialog" aria-label="Seleziona orario">
+      <div class="modal-inner">
+        <div class="picker">
+          <select id="pickHour" size="5" class="wheel"></select>
+          <span class="colon">:</span>
+          <select id="pickMin" size="5" class="wheel"></select>
+        </div>
+        <div class="modal-actions">
+          <button id="btnPickerOk" class="btn">Correggi</button>
+          <button id="btnPickerCancel" class="btn outline">Annulla</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Dettaglio giorno -->
+    <div id="modalDay" class="modal" aria-hidden="true" role="dialog" aria-label="Dettaglio giornata">
+      <div class="modal-inner">
+        <h3 id="dayTitle">Giornata</h3>
+        <div class="rows" id="dayRows"></div>
+        <div class="modal-actions">
+          <button id="btnDayClose" class="btn">Chiudi</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Picker mese -->
+    <div id="modalMonth" class="modal" aria-hidden="true" role="dialog" aria-label="Seleziona mese">
+      <div class="modal-inner">
+        <h3>Seleziona mese</h3>
+        <div class="picker">
+          <select id="pickMonth" size="5" class="wheel"></select>
+        </div>
+        <div class="modal-actions">
+          <button id="btnMonthOk" class="btn">Conferma</button>
+          <button id="btnMonthCancel" class="btn outline">Annulla</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Risultato mese -->
+    <div id="modalMonthResult" class="modal" aria-hidden="true" role="dialog" aria-label="Totale mese selezionato">
+      <div class="modal-inner">
+        <h3 id="monthResultTitle">Totale mese</h3>
+        <div class="center"><div id="monthResultValue" class="big-circle small">—</div></div>
+        <div class="modal-actions">
+          <button id="btnMonthResultClose" class="btn">Chiudi</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); });
+    }
+  </script>
+</body>
+</html>
