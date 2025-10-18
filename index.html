@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Straordinari</title>
-  <meta name="theme-color" content="#34C759" />
+  <meta name="theme-color" content="#000000" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -13,6 +13,9 @@
   <script defer src="app.js"></script>
 </head>
 <body>
+  <!-- Barra nera per notch / safe-area (iPhone 12) -->
+  <div class="safe-notch" aria-hidden="true"></div>
+
   <div class="app">
     <header class="tabs" role="tablist" aria-label="Sezioni">
       <div class="tabs-row">
@@ -98,6 +101,7 @@
       </section>
     </main>
 
+    <!-- Modals -->
     <div id="modalSettings" class="modal" aria-hidden="true" role="dialog" aria-label="Impostazioni">
       <div class="modal-inner">
         <h3>Impostazioni cloud</h3>
