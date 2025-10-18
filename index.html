@@ -15,13 +15,15 @@
 <body>
   <div class="app">
     <header class="tabs" role="tablist" aria-label="Sezioni">
-      <button class="tab active" data-target="page-main" role="tab" aria-selected="true">Pagina principale</button>
-      <button class="tab" data-target="page-recenti" role="tab" aria-selected="false">Orari recenti</button>
-      <button class="tab" data-target="page-totale" role="tab" aria-selected="false">Totale mensile</button>
+      <div class="tabs-row">
+        <button class="tab active" data-target="page-main" role="tab" aria-selected="true">Pagina principale</button>
+        <button class="tab" data-target="page-recenti" role="tab" aria-selected="false">Orari recenti</button>
+        <button class="tab" data-target="page-totale" role="tab" aria-selected="false">Totale mensile</button>
+      </div>
+      <button id="btnSettings" title="Impostazioni cloud" class="gear" aria-label="Impostazioni cloud">⚙️</button>
     </header>
 
     <main>
-      <!-- Pagina principale -->
       <section id="page-main" class="page visible" aria-labelledby="Pagina principale">
         <div class="hero">
           <button id="btnRegistra" class="btn-record" aria-label="Registra ora corrente">
@@ -70,10 +72,12 @@
         </div>
       </section>
 
-      <!-- Pagina 2: Orari recenti -->
       <section id="page-recenti" class="page" aria-labelledby="Orari recenti">
         <div class="banner" id="recentiBanner" hidden>
-          Questa sezione usa i dati archiviati in cloud. Connettiti e configura il sync in <b>Altro → Cloud sync</b>.
+          Questa sezione usa i dati archiviati in cloud. Connettiti e configura il sync nel ⚙️ in alto a destra.
+        </div>
+        <div class="row right compact">
+          <button id="btnSyncNowTop" class="btn outline smallbtn">Sincronizza ora</button>
         </div>
         <div class="card">
           <h2>Mese corrente</h2>
@@ -81,10 +85,9 @@
         </div>
       </section>
 
-      <!-- Pagina 3: Totale mensile -->
       <section id="page-totale" class="page" aria-labelledby="Totale mensile">
         <div class="banner" id="totaleBanner" hidden>
-          Questa sezione può usare i dati del cloud per il totale. Connettiti e configura il sync in <b>Altro → Cloud sync</b>.
+          Questa sezione può usare i dati del cloud per il totale. Configura il sync dal ⚙️ in alto a destra.
         </div>
         <div class="center">
           <div id="bigTotal" class="big-circle">—</div>
@@ -93,71 +96,78 @@
           <button id="btnVerificaMesi" class="btn">Verifica mesi precedenti</button>
         </div>
       </section>
-
-      <!-- Pagina Altro (config & backup) -->
-      <section id="page-altro" class="page" aria-labelledby="Altro" hidden>
-        <!-- Non più in tab: mantenuto per retrocompatibilità -->
-      </section>
     </main>
 
-    <!-- Modal: Picker ora/min -->
-    <div id="modalPicker" class="modal" aria-hidden="true" role="dialog" aria-label="Seleziona orario">
+    <div id="modalSettings" class="modal" aria-hidden="true" role="dialog" aria-label="Impostazioni">
       <div class="modal-inner">
+        <h3>Impostazioni cloud</h3>
+        <div class="rows">
+          <div class="row"><div>Abilita sync</div><div><input id="cfgSyncEnabled" type="checkbox" /></div></div>
+          <div class="row"><div>URL endpoint</div><div><input id="cfgSyncUrl" type="url" placeholder="https://script.google.com/..." /></div></div>
+          <div class="row"><div>Token (opz.)</div><div><input id="cfgSyncToken" type="text" placeholder="segredo personale" /></div></div>
+        </div>
+        <div class="modal-actions wrap">
+          <button id="btnSettingsSave" class="btn">Salva</button>
+          <button id="btnSettingsSync" class="btn outline">Sincronizza ora</button>
+          <button id="btnSettingsClose" class="btn">Chiudi</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modalPicker" class="modal" aria-hidden="true" role="dialog" aria-label="Seleziona orario">
+      <div class="modal-inner narrow">
         <div class="picker">
           <select id="pickHour" size="5" class="wheel"></select>
           <span class="colon">:</span>
           <select id="pickMin" size="5" class="wheel"></select>
         </div>
-        <div class="modal-actions">
+        <div class="modal-actions wrap">
           <button id="btnPickerOk" class="btn">Correggi</button>
           <button id="btnPickerCancel" class="btn outline">Annulla</button>
         </div>
       </div>
     </div>
 
-    <!-- Modal: Dettaglio giorno -->
     <div id="modalDay" class="modal" aria-hidden="true" role="dialog" aria-label="Dettaglio giornata">
       <div class="modal-inner">
         <h3 id="dayTitle">Giornata</h3>
         <div class="rows" id="dayRows"></div>
-        <div class="modal-actions">
+        <div class="modal-actions wrap">
           <button id="btnDayClose" class="btn">Chiudi</button>
         </div>
       </div>
     </div>
 
-    <!-- Modal: Picker mese -->
     <div id="modalMonth" class="modal" aria-hidden="true" role="dialog" aria-label="Seleziona mese">
-      <div class="modal-inner">
+      <div class="modal-inner narrow">
         <h3>Seleziona mese</h3>
         <div class="picker">
-          <select id="pickMonth" size="5" class="wheel"></select>
+          <select id="pickMonth" size="5" class="wheel wide"></select>
         </div>
-        <div class="modal-actions">
+        <div class="modal-actions wrap">
           <button id="btnMonthOk" class="btn">Conferma</button>
           <button id="btnMonthCancel" class="btn outline">Annulla</button>
         </div>
       </div>
     </div>
 
-    <!-- Modal: Risultato mese -->
     <div id="modalMonthResult" class="modal" aria-hidden="true" role="dialog" aria-label="Totale mese selezionato">
       <div class="modal-inner">
         <h3 id="monthResultTitle">Totale mese</h3>
         <div class="center"><div id="monthResultValue" class="big-circle small">—</div></div>
-        <div class="modal-actions">
+        <div class="modal-actions wrap">
           <button id="btnMonthResultClose" class="btn">Chiudi</button>
         </div>
       </div>
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-  </div>
 
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); });
-    }
-  </script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); });
+      }
+    </script>
+  </div>
 </body>
 </html>

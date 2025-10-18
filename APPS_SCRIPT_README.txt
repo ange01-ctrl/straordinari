@@ -1,0 +1,1 @@
+Usa lo script Apps Script già incollato (v5). Non servono modifiche. Se cambi TOKEN, ridistribuisci come App web e aggiorna il token nell'app.
