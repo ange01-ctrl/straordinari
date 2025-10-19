@@ -243,7 +243,31 @@ document.addEventListener('DOMContentLoaded', ()=>{
   // Settings
   $('#btnSettings').addEventListener('click', ()=>{ loadSettingsUI(); $('#modalSettings').classList.add('show'); $('#modalSettings').setAttribute('aria-hidden','false'); });
   $('#btnSettingsSave').addEventListener('click', ()=>{ saveSettings(); });
-  $('#btnSettingsSync').addEventListener('click', ()=>{ saveSettings(); trySync(); });
+  $('#btnSettingsSync').addEventListener('click', () => {
+  // 1) salva subito le impostazioni (URL/Token/flag)
+  saveSettings();
+
+  // 2) se la coda è vuota, prova ad aggiungere almeno la giornata di oggi
+  let out = parseOutbox();
+  if (out.length === 0) {
+    const t = todayLocalISO();
+    const data = parseLS();
+    if (data && data[t]) {
+      queueOutbox(t, data[t]);
+    }
+  }
+
+  // 3) ricontrolla la coda; se ancora vuota --> niente da inviare
+  out = parseOutbox();
+  if (out.length === 0) {
+    toast('Niente da sincronizzare');
+    return;
+  }
+
+  // 4) avvia la sync (il toast “Sync completata” lo mostra trySync quando finisce)
+  toast('Sync avviata');
+  trySync();
+});
   $('#btnSettingsClose').addEventListener('click', ()=>{ $('#modalSettings').classList.remove('show'); $('#modalSettings').setAttribute('aria-hidden','true'); });
   $('#modalSettings').addEventListener('click', (e)=>{ if(e.target.id==='modalSettings'){ $('#modalSettings').classList.remove('show'); $('#modalSettings').setAttribute('aria-hidden','true'); } });
 
