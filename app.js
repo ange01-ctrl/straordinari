@@ -202,13 +202,20 @@ function initTabs(){
   });
 }
 function eagerSetup(){
-  if(!localStorage.getItem(CFG_KEY)){
-    saveCFG({ startFixed:'08:00', defBreakStart:'12:30', defBreakEnd:'14:00', defEnd:'17:30', syncEnabled:true, syncUrl: DEFAULT_ENDPOINT, syncToken:'' });
-  } else {
-    const cfg=parseCFG();
-    if(!cfg.syncUrl){ cfg.syncUrl=DEFAULT_ENDPOINT; cfg.syncEnabled=true; saveCFG(cfg); }
-  }
-  finalizePastDays(); ensureDay(todayLocalISO()); updateOggiUI(); updateTotaleUI(); trySync();
+ if(!localStorage.getItem(CFG_KEY)){
+     saveCFG({startFixed:'08:00',defBreakStart:'12:30',defBreakEnd:'14:00',defEnd:'17:30',
+      syncEnabled:true,syncUrl:DEFAULT_ENDPOINT,syncToken:''});
+   }else{
+     const cfg=parseCFG();
+    // MIGRA endpoint alla nuova URL se era vuoto o diverso
+    if(!cfg.syncUrl || cfg.syncUrl!==DEFAULT_ENDPOINT){
+      cfg.syncUrl = DEFAULT_ENDPOINT;
+      cfg.syncEnabled = true;
+      cfg.migratedEndpoint = APP_VER;
+      saveCFG(cfg);
+    }
+   }
+   finalizePastDays(); ensureDay(todayLocalISO()); updateOggiUI(); updateTotaleUI(); trySync();
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
