@@ -13,9 +13,7 @@
   <script defer src="app.js"></script>
 </head>
 <body>
-  <!-- Barra nera per notch / safe-area (iPhone 12) -->
   <div class="safe-notch" aria-hidden="true"></div>
-
   <div class="app">
     <header class="tabs" role="tablist" aria-label="Sezioni">
       <div class="tabs-row">
@@ -27,11 +25,9 @@
     </header>
 
     <main>
-      <section id="page-main" class="page visible" aria-labelledby="Pagina principale">
+      <section id="page-main" class="page visible">
         <div class="hero">
-          <button id="btnRegistra" class="btn-record" aria-label="Registra ora corrente">
-            <span>Registra</span>
-          </button>
+          <button id="btnRegistra" class="btn-record"><span>Registra</span></button>
           <div class="selector">
             <label for="azione">Voce da registrare</label>
             <select id="azione">
@@ -75,10 +71,7 @@
         </div>
       </section>
 
-      <section id="page-recenti" class="page" aria-labelledby="Orari recenti">
-        <div class="banner" id="recentiBanner" hidden>
-          Questa sezione usa i dati archiviati in cloud. Connettiti e configura il sync nel ⚙️ in alto a destra.
-        </div>
+      <section id="page-recenti" class="page">
         <div class="row right compact">
           <button id="btnSyncNowTop" class="btn outline smallbtn">Sincronizza ora</button>
         </div>
@@ -88,10 +81,7 @@
         </div>
       </section>
 
-      <section id="page-totale" class="page" aria-labelledby="Totale mensile">
-        <div class="banner" id="totaleBanner" hidden>
-          Questa sezione può usare i dati del cloud per il totale. Configura il sync dal ⚙️ in alto a destra.
-        </div>
+      <section id="page-totale" class="page">
         <div class="center">
           <div id="bigTotal" class="big-circle">—</div>
         </div>
@@ -101,8 +91,8 @@
       </section>
     </main>
 
-    <!-- Modals -->
-    <div id="modalSettings" class="modal" aria-hidden="true" role="dialog" aria-label="Impostazioni">
+    <!-- Settings + Diagnostica -->
+    <div id="modalSettings" class="modal" aria-hidden="true">
       <div class="modal-inner">
         <h3>Impostazioni cloud</h3>
         <div class="rows">
@@ -110,6 +100,16 @@
           <div class="row"><div>URL endpoint</div><div><input id="cfgSyncUrl" type="url" placeholder="https://script.google.com/..." /></div></div>
           <div class="row"><div>Token (opz.)</div><div><input id="cfgSyncToken" type="text" placeholder="segredo personale" /></div></div>
         </div>
+
+        <div class="card soft">
+          <h3 style="margin:0 0 8px 0">Diagnostica</h3>
+          <div id="diagStatus" class="diag"></div>
+          <div class="modal-actions wrap">
+            <button id="btnDiagRefresh" class="btn outline">Aggiorna stato</button>
+            <button id="btnDiagTest" class="btn">Test endpoint</button>
+          </div>
+        </div>
+
         <div class="modal-actions wrap">
           <button id="btnSettingsSave" class="btn">Salva</button>
           <button id="btnSettingsSync" class="btn outline">Sincronizza ora</button>
@@ -118,7 +118,7 @@
       </div>
     </div>
 
-    <div id="modalDay" class="modal z110" aria-hidden="true" role="dialog" aria-label="Dettaglio giornata">
+    <div id="modalDay" class="modal z110" aria-hidden="true">
       <div class="modal-inner">
         <h3 id="dayTitle">Giornata</h3>
         <div class="rows" id="dayRows"></div>
@@ -128,7 +128,7 @@
       </div>
     </div>
 
-    <div id="modalPicker" class="modal z120" aria-hidden="true" role="dialog" aria-label="Seleziona orario">
+    <div id="modalPicker" class="modal z120" aria-hidden="true">
       <div class="modal-inner narrow">
         <div class="readout" id="pickerReadout">00:00</div>
         <div class="picker">
@@ -143,7 +143,7 @@
       </div>
     </div>
 
-    <div id="modalMonth" class="modal z120" aria-hidden="true" role="dialog" aria-label="Seleziona mese">
+    <div id="modalMonth" class="modal z120" aria-hidden="true">
       <div class="modal-inner narrow">
         <h3>Seleziona mese</h3>
         <div class="picker">
@@ -156,7 +156,7 @@
       </div>
     </div>
 
-    <div id="modalMonthResult" class="modal z120" aria-hidden="true" role="dialog" aria-label="Totale mese selezionato">
+    <div id="modalMonthResult" class="modal z120" aria-hidden="true">
       <div class="modal-inner">
         <h3 id="monthResultTitle">Totale mese</h3>
         <div class="center"><div id="monthResultValue" class="big-circle small">—</div></div>
@@ -169,10 +169,6 @@
     <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
   </div>
 
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); });
-    }
-  </script>
+  <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js');});}</script>
 </body>
 </html>
