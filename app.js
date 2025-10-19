@@ -174,17 +174,35 @@ function queueOutbox(dateISO, day){
   if(idx>=0) out[idx]=item; else out.push(item); saveOutbox(out);
 }
 async function trySync(){
-  const cfg=parseCFG(); if(!cfg.syncEnabled || !cfg.syncUrl) return; if(!navigator.onLine) return;
-  const out=parseOutbox(); if(out.length===0) return;
+  const cfg=parseCFG(); 
+  if(!cfg.syncEnabled || !cfg.syncUrl) return;
+  if(!navigator.onLine) return;
+  const out=parseOutbox(); 
+  if(out.length===0) return;
+
   try{
     let ok=0;
     for(const it of out){
-      const r=await fetch(cfg.syncUrl, { method:'POST', headers:{'Content-Type':'application/json','X-Auth': cfg.syncToken || ''}, body: JSON.stringify({ op:'upsert', payload: it }) });
+      const headers = { 'Content-Type':'text/plain;charset=utf-8' }; // niente preflight
+      if (cfg.syncToken) headers['X-Auth'] = cfg.syncToken;          // invia solo se presente
+
+      const r = await fetch(cfg.syncUrl, {
+        method:'POST',
+        headers,
+        body: JSON.stringify({ op:'upsert', payload: it })
+      });
       if(!r.ok) throw new Error('HTTP '+r.status);
-      const js=await r.json(); if(js && js.status==='ok') ok++;
+      const js = await r.json();
+      if(js && js.status==='ok') ok++;
     }
-    if(ok===out.length){ saveOutbox([]); toast('Sync completata'); }
-  }catch(e){ console.warn('Sync error', e); }
+    if(ok===out.length){
+      saveOutbox([]);
+      toast('Sync completata');
+    }
+  }catch(e){
+    console.warn('Sync error', e);
+    toast('Sync fallita');
+  }
 }
 
 /* Config & init */
