@@ -1,6 +1,7 @@
 /* Straordinari v5.3 */
 const LS_KEY='workdays_v1',CFG_KEY='workcfg_v5_3',OUTBOX_KEY='work_outbox_v1';
-const DEFAULT_ENDPOINT='https://script.google.com/macros/s/AKfycby_uML3OgHmtwczCroCDL3v6t9Eujd2_AVN4q3R0ynzj0iYOKwOO5BLBdvW_VXuOZqd/exec';
+const DEFAULT_ENDPOINT='https://script.google.com/macros/s/AKfycbynmO8K0yUVXtkTAEeSgMCw5i5AAv_bvmnju7_05izCodK6k89c7ANgbGgN5jgRH1S9/exec';
+const APP_VER='5.4.1';
 const $=(s,e=document)=>e.querySelector(s),$$=(s,e=document)=>[...e.querySelectorAll(s)];
 
 function todayLocalISO(){const d=new Date();return[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
