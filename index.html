@@ -10,13 +10,19 @@
 <style>
 :root{
   --bg:#000; --card:#151517; --muted:#7A7A83; --text:#F8F8FA; --brand:#34C759; --danger:#FF453A;
-  --amber:#f4c542; --border:#242428; --shadow:0 8px 30px rgba(0,0,0,0.25); --radius:14px; --greybtn:#2a2a2e;
+  --amber:#f4c542; --orange:#d88a24;
+  --border:#242428; --shadow:0 8px 30px rgba(0,0,0,0.25); --radius:14px; --greybtn:#2a2a2e;
+  --ok-bg:#0f2d1a; --ok-fg:#b6ffd4;
+  --busy-bg:#4a3600; --busy-fg:#ffe9a6;     /* giallo/arancione */
+  --err-bg:#4a0000; --err-fg:#ffc1c1;       /* rosso */
 }
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;padding-bottom:env(safe-area-inset-bottom)}
 .safe-notch{position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top);background:#000;pointer-events:none;z-index:0}
 .app{max-width:680px;margin:0 auto;padding:calc(env(safe-area-inset-top)+8px) 12px calc(12px + env(safe-area-inset-bottom))}
+
+/* Tabs */
 .tabs{display:flex;align-items:center;gap:8px;margin-bottom:6px;position:relative;z-index:1}
 .tabs-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;flex:1}
 .tab{appearance:none;border:1px solid var(--border);background:#0f0f11;color:#fff;border-radius:12px;padding:10px 12px;font-weight:600}
@@ -25,19 +31,22 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,B
 .gear.badge-red::after,.gear.badge-amber::after,.gear.badge-gray::after{
   content:""; position:absolute; right:6px; top:6px; width:8px; height:8px; border-radius:50%;
 }
-.gear.badge-red::after{ background: var(--danger); }
-.gear.badge-amber::after{ background: var(--amber); }
-.gear.badge-gray::after{ background: #888; }
+.gear.badge-red::after{ background: var(--danger) }
+.gear.badge-amber::after{ background: var(--amber) }
+.gear.badge-gray::after{ background: #888 }
 
+/* Pages */
 .page{display:none;margin-top:6px}
 .page.visible{display:block}
 
+/* Main hero */
 .hero{display:flex;flex-direction:column;align-items:center;gap:14px;margin:6px 0 16px}
 .btn-record{width:180px;height:180px;border-radius:50%;border:none;background:var(--brand);color:#073615;font-size:22px;font-weight:800;box-shadow:var(--shadow)}
 .btn-record:active{transform:scale(0.98)}
 .selector{display:flex;flex-direction:column;gap:6px;width:min(420px,100%)}
 .selector select{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0f0f11;color:#fff;font-size:16px}
 
+/* Cards & rows */
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);margin:14px 0}
 .card h2{margin:4px 0 12px 0;font-size:18px}
 .rows{display:flex;flex-direction:column;gap:10px}
@@ -59,15 +68,18 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,B
 .item.weekend .muted,.item.weekend .extra{color:#FF453A}
 .badgeSrc{font-size:12px;color:#bbb}
 
+/* Toast */
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#111;color:#fff;padding:10px 14px;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s;z-index:200}
 .toast.show{opacity:1}
 
+/* Modals */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:150}
 .modal.z110{z-index:160}.modal.z120{z-index:170}.modal.z130{z-index:180}.modal.show{display:flex}
 .modal-inner{background:#141416;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:14px;width:min(420px,94vw);max-height:90vh;overflow:auto}
 .modal-inner.narrow{width:min(360px,94vw)}
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
 
+/* Picker */
 .readout{font-weight:900;font-size:22px;text-align:center;margin:4px 0}
 .picker{display:flex;align-items:center;justify-content:center;gap:8px;margin:6px 0 2px;flex-wrap:nowrap;max-width:100%}
 .wheel-wrap{transform:scale(0.9);transform-origin:top center}
@@ -75,24 +87,24 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,B
 .wheel.wide{width:200px;max-width:70vw}.wheel option{padding:6px 0;text-align:center}.colon{font-size:22px;opacity:.8;align-self:center;padding:0 4px}
 @media (max-width:390px){.wheel-wrap{transform:scale(0.85)}.wheel{width:72px;height:110px;font-size:16px}.wheel.wide{width:180px}}
 
+/* Big circle & badges */
 .center{display:flex;justify-content:center;margin:14px 0}
 .big-circle{width:180px;height:180px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#0f0f11;border:2px solid var(--border);box-shadow:var(--shadow);font-weight:900;font-size:22px}
 .big-circle.small{width:160px;height:160px;font-size:20px}
-
 .badges{display:flex; gap:12px; align-items:center}
 .badge{border:1px solid var(--border); background:#0f0f11; color:#fff; border-radius:999px; padding:6px 10px; font-weight:700; display:flex; align-items:center; gap:6px}
-#badgeGreen{color:#7DFFA3}
-#badgeYellow{color:#FFD65C}
-#badgeRed{color:#FF5C5C}
+#badgeGreen, .b-green{color:#7DFFA3}
+#badgeYellow,.b-yellow{color:#FFD65C}
+#badgeRed,   .b-red{color:#FF5C5C}
 
-.diag{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:13px; white-space:pre-wrap; background:#0f0f11; border:1px solid var(--border); border-radius:12px; padding:8px}
-.card.soft{background:#101012}
-.chip{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:6px 10px}
-
-.sbox{border:1px dashed var(--border);border-radius:12px;padding:10px}
-.s-ok{outline:1px solid #2e7d32}
-.s-busy{outline:1px solid #b8860b}
-.s-err{outline:1px solid #a30000}
+/* Status board 2x2 con sfondo colorato */
+.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sbox{border-radius:12px;padding:10px;min-height:60px;display:flex;flex-direction:column;justify-content:center}
+.sTitle{font-weight:800;margin-bottom:4px}
+.sSub{opacity:.95}
+.s-ok   { background:var(--ok-bg);   color:var(--ok-fg) }
+.s-busy { background:var(--busy-bg); color:var(--busy-fg) }
+.s-err  { background:var(--err-bg);  color:var(--err-fg) }
 
 .appver{position:fixed; right:10px; bottom:calc(6px + env(safe-area-inset-bottom)); font-size:12px; color:#fff; opacity:.35; pointer-events:none; z-index:50}
 </style>
@@ -154,7 +166,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,B
 
       <div class="card statusboard" id="statusBoard-main">
         <h2>Stato</h2>
-        <div class="rows status-grid">
+        <div class="status-grid">
           <div class="sbox" id="sb-online"><div class="sTitle">Online</div><div class="sSub" id="sb-online-sub">—</div></div>
           <div class="sbox" id="sb-sync"><div class="sTitle">Sync</div><div class="sSub" id="sb-sync-sub">—</div></div>
           <div class="sbox" id="sb-out"><div class="sTitle">Uscita → Excel</div><div class="sSub" id="sb-out-sub">—</div></div>
@@ -167,7 +179,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,B
     <section id="page-recenti" class="page">
       <div class="card statusboard" id="statusBoard-recenti">
         <h2>Stato</h2>
-        <div class="rows status-grid">
+        <div class="status-grid">
           <div class="sbox" id="sb-online"><div class="sTitle">Online</div><div class="sSub" id="sb-online-sub">—</div></div>
           <div class="sbox" id="sb-sync"><div class="sTitle">Sync</div><div class="sSub" id="sb-sync-sub">—</div></div>
           <div class="sbox" id="sb-out"><div class="sTitle">Uscita → Excel</div><div class="sSub" id="sb-out-sub">—</div></div>
@@ -189,9 +201,23 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,B
       <div class="row right compact">
         <button id="btnSyncNowTop" class="btn outline smallbtn">Sincronizza ora</button>
       </div>
+
       <div class="card">
-        <h2>Mese corrente <span id="sourceBadge2" class="badgeSrc">[—]</span></h2>
+        <h2 style="display:flex;align-items:center;gap:10px">
+          Mese corrente <span id="sourceBadge2" class="badgeSrc">[—]</span>
+        </h2>
+
+        <!-- NUOVO: badge conteggio anche in Orari recenti -->
+        <div class="center" style="margin-top:6px;">
+          <div class="badges">
+            <span class="badge b-green">✔︎ <span id="rcGreen">0</span></span>
+            <span class="badge b-yellow">● <span id="rcYellow">0</span></span>
+            <span class="badge b-red">● <span id="rcRed">0</span></span>
+          </div>
+        </div>
+
         <div id="recentiList" class="list"></div>
+
         <div id="currentMonthTotal" class="item totalrow" style="display:none; margin-top:8px;">
           <div class="muted">Totale mese corrente</div>
           <div class="extra" id="currentMonthTotalValue">—</div>
@@ -204,7 +230,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,B
     <section id="page-totale" class="page">
       <div class="card statusboard" id="statusBoard-totale">
         <h2>Stato</h2>
-        <div class="rows status-grid">
+        <div class="status-grid">
           <div class="sbox" id="sb-online"><div class="sTitle">Online</div><div class="sSub" id="sb-online-sub">—</div></div>
           <div class="sbox" id="sb-sync"><div class="sTitle">Sync</div><div class="sSub" id="sb-sync-sub">—</div></div>
           <div class="sbox" id="sb-out"><div class="sTitle">Uscita → Excel</div><div class="sSub" id="sb-out-sub">—</div></div>
@@ -230,8 +256,8 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,B
         <div id="bigTotal" class="big-circle">—</div>
       </div>
       <div class="center">
-        <div id="monthBadges" class="badges" aria-live="polite">
-          <button class="badge" id="badgeGreen" title="Giorni con >0 e ≤3h">✔︎ <span>0</span></button>
+        <div class="badges" aria-live="polite">
+          <button class="badge" id="badgeGreen" title="Giorni con ≥0 e ≤3h">✔︎ <span>0</span></button>
           <button class="badge" id="badgeYellow" title="Giorni sotto 0h">● <span>0</span></button>
           <button class="badge" id="badgeRed" title="Giorni oltre 3h">● <span>0</span></button>
         </div>
@@ -242,7 +268,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,B
     </section>
   </main>
 
-  <!-- Modali -->
+  <!-- Modali (impostazioni, dettaglio giorno, picker, mese, esito mese, offline) -->
   <div id="modalSettings" class="modal" aria-hidden="true">
     <div class="modal-inner">
       <h3>Impostazioni</h3>
@@ -329,7 +355,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,B
       <div class="center"><div id="monthResultValue" class="big-circle small">—</div></div>
       <div class="center">
         <div id="monthResultBadges" class="badges">
-          <span class="badge" data-tip="Giorni con >0 e ≤3h">✔︎ <span>0</span></span>
+          <span class="badge" data-tip="Giorni con ≥0 e ≤3h">✔︎ <span>0</span></span>
           <span class="badge" data-tip="Giorni sotto 0h">● <span>0</span></span>
           <span class="badge" data-tip="Giorni oltre 3h">● <span>0</span></span>
         </div>
@@ -356,18 +382,18 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,B
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-  <div class="appver" aria-hidden="true">v6.2.0</div>
+  <div class="appver" aria-hidden="true">v6.3.0</div>
 </div>
 
 <script>
 /* ===== Config & util ===== */
-const LS_KEY='workdays_v1',CFG_KEY='workcfg_v6_2',OUTBOX_KEY='work_outbox_v1';
+const LS_KEY='workdays_v1',CFG_KEY='workcfg_v6_3',OUTBOX_KEY='work_outbox_v1';
 const DEFAULT_ENDPOINT='https://script.google.com/macros/s/AKfycbxKOW0oOMZRlwp6d3XX2pUtQLzI6X4FP7nfIpW0fzBJ5IVbGgujLAW31bLTqT6ml88f/exec';
-const APP_VER='6.2.0';
+const APP_VER='6.3.0';
 const $=(s,e=document)=>e.querySelector(s),$$=(s,e=document)=>[...e.querySelectorAll(s)];
 const todayLocalISO=()=>{const d=new Date();return[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');};
-const minutesFromHHMM=h=>(!h||!h.includes(':'))?0:(h.split(':').map(Number)[0]*60 + h.split(':').map(Number)[1]);
-const hhmmFromMinutes=m=>{const sign=m<0?'-':'';const mm=Math.abs(m),h=Math.floor(mm/60),n=mm%60;return `${sign}${String(h).padStart(2,'0')}:${String(n).padStart(2,'0')}`;}
+const minutesFromHHMM=h=>(!h||!h.includes(':'))?0:(h.split(':').map(Number)[0]*60+h.split(':').map(Number)[1]);
+const hhmmFromMinutes=m=>{const sign=m<0?'-':'';const mm=Math.abs(m),h=Math.floor(mm/60),n=mm%60;return`${sign}${String(h).padStart(2,'0')}:${String(n).padStart(2,'0')}`;}
 const nowHHMM=()=>{const d=new Date();return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
 const after1730=()=>{const d=new Date();return d.getHours()>17 || (d.getHours()===17 && d.getMinutes()>=30);};
 const parseLS=()=>{try{return JSON.parse(localStorage.getItem(LS_KEY))||{}}catch{return {}}}
@@ -380,14 +406,15 @@ const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('show');setT
 const monthsIt=()=>['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 const toEU=iso=>{if(!iso) return ''; const [Y,M,D]=iso.split('-'); return `${D}-${M}-${Y}`;}
 const weekdayName=d=>['Dom','Lun','Mar','Mer','Gio','Ven','Sab'][d];
-const ymCurrent=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;}
-const ymPrev=()=>{const d=new Date();const p=new Date(d.getFullYear(), d.getMonth()-1, 1);return `${p.getFullYear()}-${String(p.getMonth()+1).padStart(2,'0')}`;}
+const ymCurrent=()=>{const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;}
+const ymPrev=()=>{const d=new Date();const p=new Date(d.getFullYear(),d.getMonth()-1,1);return`${p.getFullYear()}-${String(p.getMonth()+1).padStart(2,'0')}`;}
 const withFrozenScroll=cb=>{const x=window.scrollX,y=window.scrollY;const ae=document.activeElement;try{if(typeof cb==='function')cb();}finally{if(ae&&ae.blur)ae.blur();window.scrollTo(x,y);}}
 
 /* ===== Stato UI ===== */
 const status={online:navigator.onLine?'ok':'err',sync:'idle',out:'idle',in:'idle',lastSyncOkAt:null,lastInOkAt:null,lastError:null};
 function gearBadgeRefresh(){const g=$('#btnSettings')||$('.gear'); if(!g) return;
-  g.classList.remove('badge-red','badge-amber','badge-gray'); const out=parseOutbox(); const hasQueue=out.length>0;
+  g.classList.remove('badge-red','badge-amber','badge-gray');
+  const out=parseOutbox(); const hasQueue=out.length>0;
   if(status.sync==='err'||status.in==='err') g.classList.add('badge-red');
   else if(status.sync==='busy'||status.in==='busy'||hasQueue) g.classList.add('badge-amber');
   else if(!navigator.onLine) g.classList.add('badge-gray');
@@ -447,12 +474,12 @@ function finalizePastDays(){
 function computeNetDay(d){ if(!(d.start&&d.breakStart&&d.breakEnd&&d.end)) return null;
   return (minutesFromHHMM(d.breakStart)-minutesFromHHMM(d.start)) + (minutesFromHHMM(d.end)-minutesFromHHMM(d.breakEnd));}
 function computeExtra(d){ const n=computeNetDay(d); if(n===null) return null; return n-480; }
-/* classi: rosso >180; verde 1..180; giallo <0; 0 = neutro */
-function classifyExtra(mins){ if(mins===null) return ''; if(mins>180) return 'red'; if(mins>0 && mins<=180) return 'green'; if(mins<0) return 'yellow'; return ''; }
+/* classi: rosso >180; verde >=0 && <=180; giallo <0 */
+function classifyExtra(mins){ if(mins===null) return ''; if(mins>180) return 'red'; if(mins>=0 && mins<=180) return 'green'; if(mins<0) return 'yellow'; return ''; }
 
 let cloudCacheAll=null;
 
-/* ===== Cloud ===== */
+/* ===== Cloud (usati su richiesta) ===== */
 async function fetchCloudLast(days=370){
   const cfg=cfgEnsureDefaults(); if(!cfg.syncEnabled||!cfg.syncUrl) return null;
   const headers={}; if(cfg.syncToken) headers['X-Auth']=cfg.syncToken;
@@ -481,6 +508,8 @@ function monthCounts(ym){
   } }
   return {green:g,yellow:y,red:r};
 }
+
+/* ===== Sync (upload) ===== */
 async function inbound(fn){ status.in='busy'; paintStatus(); try{ const res=await fn(); status.in='ok'; status.lastInOkAt=Date.now(); paintStatus(); return res; } catch(e){ status.in='err'; status.lastError=(e&&e.message)?e.message:String(e); paintStatus(); throw e; } finally{ setTimeout(()=>{ if(status.in==='ok') status.in='idle'; paintStatus(); },700); } }
 async function doSync(){ status.sync='busy'; status.out='busy'; paintStatus();
   try{ await trySync(); status.sync='ok'; status.lastSyncOkAt=Date.now(); const left=parseOutbox().length; status.out = left>0 ? 'busy' : 'ok'; }
@@ -506,7 +535,7 @@ async function trySync(){
   gearBadgeRefresh();
 }
 
-/* ===== UI: oggi ===== */
+/* ===== UI Oggi ===== */
 function updateOggiUI(){
   const data=parseLS(); const t=todayLocalISO(); ensureDay(t); const day=data[t];
   $('#startTime').textContent=day.start||'08:00';
@@ -543,12 +572,12 @@ function recordAction(){
   withFrozenScroll(updateOggiUI); toast('Registrato'); trySync();
 }
 
-/* ===== UI: recenti ===== */
+/* ===== UI Recenti ===== */
 let recentiFromCloud=false;
-const fmtLastCloud=ts=>{ if(!ts) return '—'; const diff=Date.now()-ts; const mins=Math.floor(diff/60000), hrs=Math.floor(mins/60), days=Math.floor(hrs/24);
+function fmtLastCloud(ts){ if(!ts) return '—'; const diff=Date.now()-ts; const mins=Math.floor(diff/60000), hrs=Math.floor(mins/60), days=Math.floor(hrs/24);
   const rel = mins<60 ? `${mins} min fa` : (hrs<48?`${hrs} h fa`:`${days} giorni fa`); const dt=new Date(ts);
   const dd=String(dt.getDate()).padStart(2,'0'), mm=String(dt.getMonth()+1).padStart(2,'0'), yy=dt.getFullYear();
-  const hh=String(dt.getHours()).padStart(2,'0'), mi=String(dt.getMinutes()).padStart(2,'0'); return `${rel} — ${dd}-${mm}-${yy} ${hh}:${mi}`; };
+  const hh=String(dt.getHours()).padStart(2,'0'), mi=String(dt.getMinutes()).padStart(2,'0'); return `${rel} — ${dd}-${mm}-${yy} ${hh}:${mi}`; }
 async function getMonthMap(ym){
   const res={}; const [Y,M]=ym.split('-').map(n=>parseInt(n,10)); const days=new Date(Y,M,0).getDate();
   const local=parseLS(); let mapCloud=null;
@@ -558,7 +587,7 @@ async function getMonthMap(ym){
   if(mapCloud){ const cfg=cfgEnsureDefaults(); cfg.lastCloudMapAt_ms=Date.now(); saveCFG(cfg); }
   return res;
 }
-const flagHTMLByExtra=e=>{ const cls=classifyExtra(e);
+function flagHTMLByExtra(e){ const cls=classifyExtra(e);
   if(cls==='red') return '<span style="color:#FF5C5C">●</span>';
   if(cls==='green') return '<span style="color:#7DFFA3">✔︎</span>';
   if(cls==='yellow') return '<span style="color:#FFD65C">●</span>';
@@ -576,11 +605,13 @@ async function updateRecentiUI(){
     el.querySelector('.editbtn').addEventListener('click',ev=>{ ev.stopPropagation(); openDayDetail(iso); });
     list.appendChild(el);
   }
+  // Totale + badge conteggio
   let total=null; try{ const t=await inbound(()=>monthTotalFromCloud(ym)); if(typeof t==='number') total=t; }catch(e){}
   if(total===null) total=sumMonthLocal(ym);
   $('#currentMonthTotal').style.display='grid'; const s=total>=0?'+':'−'; $('#currentMonthTotalValue').textContent=`${s}${hhmmFromMinutes(Math.abs(total))}`;
   $('#sourceBadge2').textContent=`[${recentiFromCloud?'Cloud':'Locale'}]`;
   const cfg=cfgEnsureDefaults(); $('#lastCloud2').textContent=fmtLastCloud(cfg.lastCloudMapAt_ms||0);
+  const cnt=monthCounts(ym); $('#rcGreen').textContent=cnt.green; $('#rcYellow').textContent=cnt.yellow; $('#rcRed').textContent=cnt.red;
   paintStatus();
 }
 
@@ -608,7 +639,7 @@ async function updateTotaleUI(){
   if(total===null) total=sumMonthLocal(ym);
   const s=total>=0?'+':'−'; $('#bigTotal').textContent=`${s}${hhmmFromMinutes(Math.abs(total))}`;
   if(!cloudCacheAll && navigator.onLine){ try{ cloudCacheAll=await inbound(()=>fetchCloudLast(370)); }catch(e){} }
-  const cnt=monthCounts(ym); $('#badgeGreen span').textContent=cnt.green; $('#badgeYellow span').textContent=cnt.yellow; $('#badgeRed span').textContent=cnt.red;
+  const cnt=monthCounts(ym); const spans=$$('#badgeGreen span, #badgeYellow span, #badgeRed span'); spans[0].textContent=cnt.green; spans[1].textContent=cnt.yellow; spans[2].textContent=cnt.red;
   const cfg=cfgEnsureDefaults(); const ts=(cfg.lastCloudMonthAt_ms&&cfg.lastCloudMonthAt_ms[ym])||0; $('#lastCloud3').textContent=fmtLastCloud(ts); paintStatus();
 }
 
@@ -618,7 +649,7 @@ function buildMonthOptions(){ const sel=$('#pickMonth'); sel.innerHTML=''; const
     const op=document.createElement('option'); op.value=ym; op.textContent=`${m[dt.getMonth()]} ${dt.getFullYear()}`; sel.appendChild(op); }
   sel.selectedIndex=0;
 }
-function openMonthPicker(){ withFrozenScroll(()=>{ buildMonthOptions(); $('#modalMonth').classList.add('show'); $('#modalMonth').setAttribute('aria-hidden','false'); }); }
+function openMonthPicker(){ buildMonthOptions(); $('#modalMonth').classList.add('show'); $('#modalMonth').setAttribute('aria-hidden','false'); }
 function closeMonthPicker(){ $('#modalMonth').classList.remove('show'); $('#modalMonth').setAttribute('aria-hidden','true'); }
 async function confirmMonthPicker(){
   const ym=$('#pickMonth').value; closeMonthPicker(); let total=null; try{ total=await inbound(()=>monthTotalFromCloud(ym)); }catch(e){ total=null; }
@@ -673,56 +704,47 @@ async function testEndpoint(){ const cfg=cfgEnsureDefaults(); const res={};
   $('#diagStatus').textContent += `\n\nTest endpoint:\nPING -> ${res.ping}\nMONTH -> ${res.month}`;
 }
 
-/* ===== Avvio, tabs, handlers ===== */
-let autoSyncRunning=false, lastStartupSyncAt=0;
-async function autoStartupSync(){
-  if(autoSyncRunning) return; autoSyncRunning=true;
-  try{
-    if(navigator.onLine){
-      if(parseOutbox().length>0) await doSync();
-      try{ cloudCacheAll=await inbound(()=>fetchCloudLast(370)); const cfg=cfgEnsureDefaults(); cfg.lastCloudMapAt_ms=Date.now(); saveCFG(cfg);}catch(e){}
-      try{ await inbound(()=>monthTotalFromCloud(ymCurrent())); }catch(e){}
-      try{ const ym=ymPrev(); const t=await inbound(()=>monthTotalFromCloud(ym)); if(typeof t==='number'){ const cfg=cfgEnsureDefaults(); cfg.lastCloudMonthAt_ms=cfg.lastCloudMonthAt_ms||{}; cfg.lastCloudMonthAt_ms[ym]=Date.now(); saveCFG(cfg);} }catch(e){}
-    }
-    updateOggiUI(); updateRecentiUI(); updateTotaleUI(); paintStatus(); lastStartupSyncAt=Date.now();
-  } finally{ autoSyncRunning=false; }
+/* ===== Avvio limitato & tab fetch una sola volta ===== */
+let fetchedOnStartup=false, fetchedRecenti=false, fetchedTotale=false;
+async function limitedStartupFetch(){
+  if(fetchedOnStartup) return; fetchedOnStartup=true;
+  // Upload eventuale coda, ma niente download multipli
+  if(parseOutbox().length>0) await doSync();
+  if(navigator.onLine){
+    try{ cloudCacheAll=await inbound(()=>fetchCloudLast(370)); const cfg=cfgEnsureDefaults(); cfg.lastCloudMapAt_ms=Date.now(); saveCFG(cfg);}catch(e){}
+    try{ await inbound(()=>monthTotalFromCloud(ymCurrent())); }catch(e){}
+    try{ const ym=ymPrev(); const t=await inbound(()=>monthTotalFromCloud(ym)); if(typeof t==='number'){ const cfg=cfgEnsureDefaults(); cfg.lastCloudMonthAt_ms=cfg.lastCloudMonthAt_ms||{}; cfg.lastCloudMonthAt_ms[ym]=Date.now(); saveCFG(cfg);} }catch(e){}
+  }
 }
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && Date.now()-lastStartupSyncAt>3*60*1000) autoStartupSync(); });
-window.addEventListener('online',()=>{ if(Date.now()-lastStartupSyncAt>10*60*1000) autoStartupSync(); });
 
+/* ===== Tabs & listeners ===== */
 function initTabs(){
   $$('.tab').forEach(b=>{
-    b.addEventListener('click',()=>{
+    b.addEventListener('click',async()=>{
       $$('.tab').forEach(x=>x.classList.remove('active')); b.classList.add('active');
       const t=b.getAttribute('data-target'); $$('.page').forEach(p=>p.classList.remove('visible')); $('#'+t).classList.add('visible');
-      if(t==='page-recenti'){ if(!maybeWarnOffline('recenti')) withFrozenScroll(updateRecentiUI); }
-      if(t==='page-totale'){ if(!maybeWarnOffline('totale')) updateTotaleUI(); }
+      // Primo ingresso in pagina: un solo download
+      if(t==='page-recenti' && !fetchedRecenti){
+        fetchedRecenti=true; if(!maybeWarnOffline('recenti')) await updateRecentiUI(); else paintStatus();
+      } else if(t==='page-recenti'){ withFrozenScroll(updateRecentiUI); }
+      if(t==='page-totale' && !fetchedTotale){
+        fetchedTotale=true; if(!maybeWarnOffline('totale')) await updateTotaleUI(); else paintStatus();
+      } else if(t==='page-totale'){ updateTotaleUI(); }
       paintStatus();
     });
   });
 }
+
+/* ===== Bootstrap ===== */
 function eagerSetup(){ cfgEnsureDefaults(); finalizePastDays(); ensureDay(todayLocalISO()); updateOggiUI(); paintStatus(); }
+document.addEventListener('DOMContentLoaded', async ()=>{
+  initTabs(); eagerSetup();
+  await limitedStartupFetch(); // 1 sola volta all’avvio
+  // Non richiamiamo auto-fetch su visibilitychange/online per rispettare la tua richiesta
+  // (restano i bottoni manuali di refresh)
 
-document.addEventListener('DOMContentLoaded',()=>{
-  initTabs(); eagerSetup(); autoStartupSync();
-
-  const gear=$('#btnSettings')||$('.gear'); let tmr=null, long=false;
-  const startPress=()=>{ long=false; tmr=setTimeout(()=>{ long=true; loadSettingsUI(); $('#modalSettings').classList.add('show'); $('#modalSettings').setAttribute('aria-hidden','false'); document.getElementById('diagCard')?.scrollIntoView({behavior:'smooth'}); },600); };
-  const endPress=()=>{ if(tmr) clearTimeout(tmr); if(!long){ loadSettingsUI(); $('#modalSettings').classList.add('show'); $('#modalSettings').setAttribute('aria-hidden','false'); } };
-  if(gear){ gear.addEventListener('touchstart',startPress); gear.addEventListener('mousedown',startPress); gear.addEventListener('touchend',endPress); gear.addEventListener('mouseup',endPress);
-            gear.addEventListener('mouseleave',()=>{ if(tmr) clearTimeout(tmr); }); gear.addEventListener('touchcancel',()=>{ if(tmr) clearTimeout(tmr); }); }
-
-  $('#btnSettingsSave').addEventListener('click',()=>{ saveSettings(); });
-  $('#btnSettingsSync').addEventListener('click',()=>{ saveSettings(); doSync(); });
-  $('#btnSettingsClose').addEventListener('click',()=>{ $('#modalSettings').classList.remove('show'); $('#modalSettings').setAttribute('aria-hidden','true'); });
-  $('#modalSettings').addEventListener('click',(e)=>{ if(e.target.id==='modalSettings'){ $('#modalSettings').classList.remove('show'); $('#modalSettings').setAttribute('aria-hidden','true'); } });
-
-  $('#btnDiagRefresh').addEventListener('click',()=>{ updateDiagnostics(); });
-  $('#btnDiagTest').addEventListener('click',()=>{ testEndpoint(); });
-  $('#btnSnoozeOffWarn').addEventListener('click',()=>{ snoozeOffWarn24h(); });
-  $('#btnOffWarnResume').addEventListener('click',()=>{ resumeOffWarn(); });
-  $('#cfgOffWarnEnabled').addEventListener('change',()=>{ saveSettings(); });
-
+  // Handlers
+  $('#btnRegistra').addEventListener('click',recordAction);
   $$('#rowsOggi .btn.ghost').forEach(btn=>{
     btn.addEventListener('click',()=>{
       const f=btn.getAttribute('data-edit'); const t=todayLocalISO(); const d=parseLS()[t]||{};
@@ -730,10 +752,12 @@ document.addEventListener('DOMContentLoaded',()=>{
       openPicker(t,f,cur);
     });
   });
-  $('#btnRegistra').addEventListener('click',recordAction);
+
+  // Picker
   $('#btnPickerOk').addEventListener('click',applyPicker);
   $('#btnPickerCancel').addEventListener('click',closePicker);
 
+  // Giorno
   $('#btnDaySetStd').addEventListener('click',()=>{
     const data=parseLS(); const t=$('#dayTitle').textContent.split(' ').pop(); const [D,M,Y]=t.split('-'); const iso=`${Y}-${M}-${D}`;
     ensureDay(iso); const day=data[iso]; const cfg=cfgEnsureDefaults();
@@ -743,35 +767,34 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('#btnDayClose').addEventListener('click',()=>{ closeDayDetail(); withFrozenScroll(updateRecentiUI); });
   $('#modalDay').addEventListener('click',(e)=>{ if(e.target.id==='modalDay'){ closeDayDetail(); withFrozenScroll(updateRecentiUI); } });
 
-  $('#btnVerificaMesi').addEventListener('click',openMonthPicker);
-  $('#btnMonthOk').addEventListener('click',confirmMonthPicker);
-  $('#btnMonthCancel').addEventListener('click',closeMonthPicker);
-  $('#modalMonth').addEventListener('click',(e)=>{ if(e.target.id==='modalMonth'){ closeMonthPicker(); } });
+  // Settings
+  const gear=$('#btnSettings')||$('.gear'); let tmr=null, long=false;
+  const startPress=()=>{ long=false; tmr=setTimeout(()=>{ long=true; loadSettingsUI(); $('#modalSettings').classList.add('show'); $('#modalSettings').setAttribute('aria-hidden','false'); document.getElementById('diagCard')?.scrollIntoView({behavior:'smooth'}); },600); };
+  const endPress=()=>{ if(tmr) clearTimeout(tmr); if(!long){ loadSettingsUI(); $('#modalSettings').classList.add('show'); $('#modalSettings').setAttribute('aria-hidden','false'); } };
+  if(gear){ gear.addEventListener('touchstart',startPress); gear.addEventListener('mousedown',startPress); gear.addEventListener('touchend',endPress); gear.addEventListener('mouseup',endPress);
+            gear.addEventListener('mouseleave',()=>{ if(tmr) clearTimeout(tmr); }); gear.addEventListener('touchcancel',()=>{ if(tmr) clearTimeout(tmr); }); }
+  $('#btnSettingsSave').addEventListener('click',()=>{ saveSettings(); });
+  $('#btnSettingsSync').addEventListener('click',()=>{ saveSettings(); doSync(); });
+  $('#btnSettingsClose').addEventListener('click',()=>{ $('#modalSettings').classList.remove('show'); $('#modalSettings').setAttribute('aria-hidden','true'); });
+  $('#modalSettings').addEventListener('click',(e)=>{ if(e.target.id==='modalSettings'){ $('#modalSettings').classList.remove('show'); $('#modalSettings').setAttribute('aria-hidden','true'); } });
+  $('#btnDiagRefresh').addEventListener('click',()=>{ updateDiagnostics(); });
+  $('#btnDiagTest').addEventListener('click',()=>{ testEndpoint(); });
+  $('#btnSnoozeOffWarn').addEventListener('click',()=>{ snoozeOffWarn24h(); });
+  $('#btnOffWarnResume').addEventListener('click',()=>{ resumeOffWarn(); });
+  $('#cfgOffWarnEnabled').addEventListener('change',()=>{ saveSettings(); });
 
-  $('#btnOpenMonthCurrent').addEventListener('click', async ()=>{
-    if(navigator.onLine) await inbound(()=>monthTotalFromCloud(ymCurrent()));
-    $('#monthResultTitle').textContent='Totale mese corrente';
-    $('#monthResultValue').textContent=$('#currentMonthTotalValue').textContent;
-    if(!cloudCacheAll && navigator.onLine){ try{ cloudCacheAll=await inbound(()=>fetchCloudLast(370)); }catch(e){} }
-    const cnt=monthCounts(ymCurrent()); const spans=$$('#monthResultBadges .badge span'); spans[0].textContent=cnt.green; spans[1].textContent=cnt.yellow; spans[2].textContent=cnt.red;
-    $('#modalMonthResult').classList.add('show'); $('#modalMonthResult').setAttribute('aria-hidden','false');
-  });
+  // Cloud manuale
+  $('#btnRefreshCloud2').addEventListener('click', async ()=>{ if(!navigator.onLine) return; try{ cloudCacheAll=await inbound(()=>fetchCloudLast(370)); const cfg=cfgEnsureDefaults(); cfg.lastCloudMapAt_ms=Date.now(); saveCFG(cfg);}catch(e){} await updateRecentiUI(); });
+  $('#btnRefreshCloud3').addEventListener('click', async ()=>{ if(!navigator.onLine) return; try{ await inbound(()=>monthTotalFromCloud(ymPrev())); const cfg=cfgEnsureDefaults(); cfg.lastCloudMonthAt_ms=cfg.lastCloudMonthAt_ms||{}; cfg.lastCloudMonthAt_ms[ymPrev()]=Date.now(); saveCFG(cfg);}catch(e){} updateTotaleUI(); });
 
   $('#btnSyncNowTop').addEventListener('click', async ()=>{
     let out=parseOutbox(); if(out.length===0){ const t=todayLocalISO(); const data=parseLS(); if(data&&data[t]) queueOutbox(t,data[t]); }
     out=parseOutbox(); if(out.length===0){ toast('Niente da sincronizzare'); } else { toast('Sync avviata'); await doSync(); }
-    if(navigator.onLine){ try{ cloudCacheAll=await inbound(()=>fetchCloudLast(370)); }catch(e){} } withFrozenScroll(updateRecentiUI);
+    if(navigator.onLine && fetchedRecenti){ await updateRecentiUI(); }
   });
 
-  $('#btnOfflineLocal').addEventListener('click',()=>{ const k='offwarn_'+($('#modalOffline').getAttribute('data-page')||'')+'_shown'; if($('#offWarnNoMoreSession').checked) sessionStorage.setItem(k,'1'); closeOfflineModal(); });
-  $('#btnOfflineSettings').addEventListener('click',()=>{ const k='offwarn_'+($('#modalOffline').getAttribute('data-page')||'')+'_shown'; sessionStorage.setItem(k,'1'); closeOfflineModal(); loadSettingsUI(); $('#modalSettings').classList.add('show'); $('#modalSettings').setAttribute('aria-hidden','false'); });
-  $('#btnOfflineRetry').addEventListener('click',async()=>{ if(navigator.onLine){ const k='offwarn_'+($('#modalOffline').getAttribute('data-page')||'')+'_shown'; sessionStorage.setItem(k,'1'); closeOfflineModal(); updateRecentiUI(); updateTotaleUI(); } else toast('Sei ancora offline'); });
-
-  $('#btnRefreshCloud2').addEventListener('click', async ()=>{ if(!navigator.onLine) return; try{ cloudCacheAll=await inbound(()=>fetchCloudLast(370)); const cfg=cfgEnsureDefaults(); cfg.lastCloudMapAt_ms=Date.now(); saveCFG(cfg);}catch(e){} withFrozenScroll(updateRecentiUI); });
-  $('#btnRefreshCloud3').addEventListener('click', async ()=>{ if(!navigator.onLine) return; try{ await inbound(()=>monthTotalFromCloud(ymPrev())); const cfg=cfgEnsureDefaults(); cfg.lastCloudMonthAt_ms=cfg.lastCloudMonthAt_ms||{}; cfg.lastCloudMonthAt_ms[ymPrev()]=Date.now(); saveCFG(cfg);}catch(e){} updateTotaleUI(); });
-
-  // tooltips badge
-  const explain=(k)=>{ if(k==='green') toast('✔︎ Verde: giorni con straordinario >0h e ≤3h'); if(k==='yellow') toast('● Giallo: giorni con straordinario negativo (meno di 8h)'); if(k==='red') toast('● Rosso: giorni con straordinario >3h'); };
+  // Badge hint (totale)
+  const explain=(k)=>{ if(k==='green') toast('✔︎ Verde: giorni con straordinario ≥0h e ≤3h'); if(k==='yellow') toast('● Giallo: giorni con straordinario negativo (meno di 8h)'); if(k==='red') toast('● Rosso: giorni con straordinario >3h'); };
   $('#badgeGreen').addEventListener('click',()=>explain('green'));
   $('#badgeYellow').addEventListener('click',()=>explain('yellow'));
   $('#badgeRed').addEventListener('click',()=>explain('red'));
