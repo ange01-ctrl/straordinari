@@ -510,6 +510,23 @@ function monthCounts(ym){
 }
 
 /* ===== Sync (upload) ===== */
+  <script>
+async function sumAndCountsFromMap(ym){
+  const map = await getMonthMap(ym); // usa "last" se online, locale se offline
+  let total = 0, g=0, y=0, r=0;
+  for(const iso of Object.keys(map)){
+    if(!iso.startsWith(ym)) continue;
+    const e = computeExtra(map[iso]||{});
+    if(e!==null){
+      total += e;
+      const cls = classifyExtra(e); // rosso >180; verde 0..180; giallo <0
+      if(cls==='green') g++; else if(cls==='yellow') y++; else if(cls==='red') r++;
+    }
+  }
+  return { total, counts:{green:g,yellow:y,red:r} };
+}
+</script>
+
 async function inbound(fn){ status.in='busy'; paintStatus(); try{ const res=await fn(); status.in='ok'; status.lastInOkAt=Date.now(); paintStatus(); return res; } catch(e){ status.in='err'; status.lastError=(e&&e.message)?e.message:String(e); paintStatus(); throw e; } finally{ setTimeout(()=>{ if(status.in==='ok') status.in='idle'; paintStatus(); },700); } }
 async function doSync(){ status.sync='busy'; status.out='busy'; paintStatus();
   try{ await trySync(); status.sync='ok'; status.lastSyncOkAt=Date.now(); const left=parseOutbox().length; status.out = left>0 ? 'busy' : 'ok'; }
@@ -632,16 +649,41 @@ function openDayDetail(d){ $('#dayTitle').textContent=`Giornata ${toEU(d)}`; ren
 function closeDayDetail(){ $('#modalDay').classList.remove('show'); $('#modalDay').setAttribute('aria-hidden','true'); }
 
 /* ===== UI: totale ===== */
+<script>
 async function updateTotaleUI(){
-  const ym=ymPrev(); const [Y,M]=ym.split('-').map(n=>parseInt(n,10)); const name=`${monthsIt()[M-1]} ${Y}`;
-  $('#lastMonthTitle').textContent=`Totale mese scorso — ${name}`;
-  let total=null; try{ const t=await inbound(()=>monthTotalFromCloud(ym)); if(typeof t==='number'){ total=t; const cfg=cfgEnsureDefaults(); cfg.lastCloudMonthAt_ms=cfg.lastCloudMonthAt_ms||{}; cfg.lastCloudMonthAt_ms[ym]=Date.now(); saveCFG(cfg);} }catch(e){}
-  if(total===null) total=sumMonthLocal(ym);
-  const s=total>=0?'+':'−'; $('#bigTotal').textContent=`${s}${hhmmFromMinutes(Math.abs(total))}`;
-  if(!cloudCacheAll && navigator.onLine){ try{ cloudCacheAll=await inbound(()=>fetchCloudLast(370)); }catch(e){} }
-  const cnt=monthCounts(ym); const spans=$$('#badgeGreen span, #badgeYellow span, #badgeRed span'); spans[0].textContent=cnt.green; spans[1].textContent=cnt.yellow; spans[2].textContent=cnt.red;
-  const cfg=cfgEnsureDefaults(); const ts=(cfg.lastCloudMonthAt_ms&&cfg.lastCloudMonthAt_ms[ym])||0; $('#lastCloud3').textContent=fmtLastCloud(ts); paintStatus();
+  const ym = ymPrev();
+  const [Y,M] = ym.split('-').map(n=>parseInt(n,10));
+  const name = `${monthsIt()[M-1]} ${Y}`;
+  $('#lastMonthTitle').textContent = `Totale mese scorso — ${name}`;
+
+  // Somma e conteggi dalla stessa mappa (coerenti, 1 riga/giorno)
+  let total=0, counts={green:0,yellow:0,red:0};
+  try{
+    const res = await sumAndCountsFromMap(ym);
+    total = res.total; counts = res.counts;
+    // timestamp ultimo cloud map
+    const cfg = cfgEnsureDefaults();
+    if(navigator.onLine){ cfg.lastCloudMonthAt_ms = cfg.lastCloudMonthAt_ms||{}; cfg.lastCloudMonthAt_ms[ym] = Date.now(); saveCFG(cfg); }
+    const ts = (cfg.lastCloudMonthAt_ms && cfg.lastCloudMonthAt_ms[ym]) || (cfg.lastCloudMapAt_ms || 0);
+    $('#lastCloud3').textContent = fmtLastCloud(ts);
+  }catch(e){
+    // fallback locale in caso di errore
+    total = sumMonthLocal(ym);
+    const cnt = monthCounts(ym);
+    counts = cnt;
+  }
+
+  const s = total>=0?'+':'−';
+  $('#bigTotal').textContent = `${s}${hhmmFromMinutes(Math.abs(total))}`;
+  const spans = $$('#badgeGreen span, #badgeYellow span, #badgeRed span');
+  spans[0].textContent = counts.green;
+  spans[1].textContent = counts.yellow;
+  spans[2].textContent = counts.red;
+
+  paintStatus();
 }
+</script>
+
 
 /* ===== Month picker ===== */
 function buildMonthOptions(){ const sel=$('#pickMonth'); sel.innerHTML=''; const now=new Date(); const m=monthsIt();
@@ -651,14 +693,34 @@ function buildMonthOptions(){ const sel=$('#pickMonth'); sel.innerHTML=''; const
 }
 function openMonthPicker(){ buildMonthOptions(); $('#modalMonth').classList.add('show'); $('#modalMonth').setAttribute('aria-hidden','false'); }
 function closeMonthPicker(){ $('#modalMonth').classList.remove('show'); $('#modalMonth').setAttribute('aria-hidden','true'); }
+<script>
 async function confirmMonthPicker(){
-  const ym=$('#pickMonth').value; closeMonthPicker(); let total=null; try{ total=await inbound(()=>monthTotalFromCloud(ym)); }catch(e){ total=null; }
-  if(total===null) total=sumMonthLocal(ym);
-  $('#monthResultTitle').textContent=`Totale ${ym}`; const s=total>=0?'+':'−'; $('#monthResultValue').textContent=`${s}${hhmmFromMinutes(Math.abs(total))}`;
-  if(!cloudCacheAll && navigator.onLine){ try{ cloudCacheAll=await inbound(()=>fetchCloudLast(370)); }catch(e){} }
-  const cnt=monthCounts(ym); const spans=$$('#monthResultBadges .badge span'); spans[0].textContent=cnt.green; spans[1].textContent=cnt.yellow; spans[2].textContent=cnt.red;
-  $('#modalMonthResult').classList.add('show'); $('#modalMonthResult').setAttribute('aria-hidden','false');
+  const ym = $('#pickMonth').value;
+  closeMonthPicker();
+
+  let total=0, counts={green:0,yellow:0,red:0};
+  try{
+    const res = await sumAndCountsFromMap(ym);
+    total = res.total; counts = res.counts;
+  }catch(e){
+    total = sumMonthLocal(ym);
+    counts = monthCounts(ym);
+  }
+
+  $('#monthResultTitle').textContent = `Totale ${ym}`;
+  const s = total>=0?'+':'−';
+  $('#monthResultValue').textContent = `${s}${hhmmFromMinutes(Math.abs(total))}`;
+
+  const spans = $$('#monthResultBadges .badge span');
+  spans[0].textContent = counts.green;
+  spans[1].textContent = counts.yellow;
+  spans[2].textContent = counts.red;
+
+  $('#modalMonthResult').classList.add('show');
+  $('#modalMonthResult').setAttribute('aria-hidden','false');
 }
+</script>
+
 document.addEventListener('click',e=>{ if(e.target&&e.target.id==='btnMonthResultClose'){ $('#modalMonthResult').classList.remove('show'); $('#modalMonthResult').setAttribute('aria-hidden','true'); } });
 
 /* ===== Picker orari ===== */
