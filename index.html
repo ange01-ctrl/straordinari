@@ -13,8 +13,8 @@
   --amber:#f4c542; --orange:#d88a24;
   --border:#242428; --shadow:0 8px 30px rgba(0,0,0,0.25); --radius:14px; --greybtn:#2a2a2e;
   --ok-bg:#0f2d1a; --ok-fg:#b6ffd4;
-  --busy-bg:#4a3600; --busy-fg:#ffe9a6;     /* giallo/arancione */
-  --err-bg:#4a0000; --err-fg:#ffc1c1;       /* rosso */
+  --busy-bg:#4a3600; --busy-fg:#ffe9a6;
+  --err-bg:#4a0000; --err-fg:#ffc1c1;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -207,7 +207,6 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,B
           Mese corrente <span id="sourceBadge2" class="badgeSrc">[—]</span>
         </h2>
 
-        <!-- NUOVO: badge conteggio anche in Orari recenti -->
         <div class="center" style="margin-top:6px;">
           <div class="badges">
             <span class="badge b-green">✔︎ <span id="rcGreen">0</span></span>
@@ -268,7 +267,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,B
     </section>
   </main>
 
-  <!-- Modali (impostazioni, dettaglio giorno, picker, mese, esito mese, offline) -->
+  <!-- Modali -->
   <div id="modalSettings" class="modal" aria-hidden="true">
     <div class="modal-inner">
       <h3>Impostazioni</h3>
@@ -382,14 +381,15 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,B
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-  <div class="appver" aria-hidden="true">v6.3.0</div>
+  <div class="appver" aria-hidden="true">v6.3.2</div>
 </div>
 
 <script>
 /* ===== Config & util ===== */
-const LS_KEY='workdays_v1',CFG_KEY='workcfg_v6_3',OUTBOX_KEY='work_outbox_v1';
-const DEFAULT_ENDPOINT='https://script.google.com/macros/s/AKfycbxKOW0oOMZRlwp6d3XX2pUtQLzI6X4FP7nfIpW0fzBJ5IVbGgujLAW31bLTqT6ml88f/exec';
-const APP_VER='6.3.0';
+const LS_KEY='workdays_v1',CFG_KEY='workcfg_v6_3_2',OUTBOX_KEY='work_outbox_v1';
+// index.html (v6.3.2)
+const DEFAULT_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxKOW0oOMZRlwp6d3XX2pUtQLzI6X4FP7nfIpW0fzBJ5IVbGgujLAW31bLTqT6ml88f/exec';
+const APP_VER='6.3.2';
 const $=(s,e=document)=>e.querySelector(s),$$=(s,e=document)=>[...e.querySelectorAll(s)];
 const todayLocalISO=()=>{const d=new Date();return[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');};
 const minutesFromHHMM=h=>(!h||!h.includes(':'))?0:(h.split(':').map(Number)[0]*60+h.split(':').map(Number)[1]);
@@ -479,7 +479,7 @@ function classifyExtra(mins){ if(mins===null) return ''; if(mins>180) return 're
 
 let cloudCacheAll=null;
 
-/* ===== Cloud (usati su richiesta) ===== */
+/* ===== Cloud helpers (download su richiesta) ===== */
 async function fetchCloudLast(days=370){
   const cfg=cfgEnsureDefaults(); if(!cfg.syncEnabled||!cfg.syncUrl) return null;
   const headers={}; if(cfg.syncToken) headers['X-Auth']=cfg.syncToken;
@@ -488,13 +488,6 @@ async function fetchCloudLast(days=370){
   const arr=await r.json(); const map={};
   if(Array.isArray(arr)){ for(const a of arr){ map[a.date]={start:a.start||null,breakStart:a.breakStart||null,breakEnd:a.breakEnd||null,end:a.end||null,finalized:!!a.finalized}; } }
   return map;
-}
-async function monthTotalFromCloud(ym){
-  const cfg=cfgEnsureDefaults(); if(!cfg.syncEnabled||!cfg.syncUrl) return null;
-  const headers={}; if(cfg.syncToken) headers['X-Auth']=cfg.syncToken;
-  const r=await fetch(`${cfg.syncUrl}?op=month&ym=${encodeURIComponent(ym)}`,{headers});
-  if(!r.ok) return null; const js=await r.json();
-  return (js&&typeof js.totalExtraMinutes==='number')?js.totalExtraMinutes:null;
 }
 function sumMonthLocal(ym){
   const data=parseLS(); let tot=0;
@@ -508,25 +501,41 @@ function monthCounts(ym){
   } }
   return {green:g,yellow:y,red:r};
 }
-
-/* ===== Sync (upload) ===== */
-  <script>
+async function monthTotalFromCloud(ym){
+  const cfg=cfgEnsureDefaults(); if(!cfg.syncEnabled||!cfg.syncUrl) return null;
+  const headers={}; if(cfg.syncToken) headers['X-Auth']=cfg.syncToken;
+  const r=await fetch(`${cfg.syncUrl}?op=month&ym=${encodeURIComponent(ym)}`,{headers});
+  if(!r.ok) return null; const js=await r.json();
+  return (js&&typeof js.totalExtraMinutes==='number')?js.totalExtraMinutes:null;
+}
+/* === v6.3.2: somma + conteggi sempre dalla mappa (una riga/giorno) === */
+async function getMonthMap(ym){
+  const res={}; const [Y,M]=ym.split('-').map(n=>parseInt(n,10)); const days=new Date(Y,M,0).getDate();
+  const local=parseLS(); let mapCloud=null;
+  if(navigator.onLine){ try{ mapCloud=await inbound(()=>fetchCloudLast(370)); }catch(e){ mapCloud=null; } }
+  for(let i=1;i<=days;i++){
+    const iso=`${Y}-${String(M).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+    res[iso]=(mapCloud&&mapCloud[iso])||local[iso]||{};
+  }
+  if(mapCloud){ const cfg=cfgEnsureDefaults(); cfg.lastCloudMapAt_ms=Date.now(); saveCFG(cfg); cloudCacheAll=mapCloud; }
+  return { map:res, fromCloud: !!mapCloud };
+}
 async function sumAndCountsFromMap(ym){
-  const map = await getMonthMap(ym); // usa "last" se online, locale se offline
-  let total = 0, g=0, y=0, r=0;
+  const {map} = await getMonthMap(ym);
+  let total=0, g=0, y=0, r=0;
   for(const iso of Object.keys(map)){
     if(!iso.startsWith(ym)) continue;
-    const e = computeExtra(map[iso]||{});
+    const e=computeExtra(map[iso]||{});
     if(e!==null){
-      total += e;
-      const cls = classifyExtra(e); // rosso >180; verde 0..180; giallo <0
+      total+=e;
+      const cls=classifyExtra(e);
       if(cls==='green') g++; else if(cls==='yellow') y++; else if(cls==='red') r++;
     }
   }
-  return { total, counts:{green:g,yellow:y,red:r} };
+  return { total, counts:{green:g,yellow:y,red:r}, map };
 }
-</script>
 
+/* ===== Sync (upload) ===== */
 async function inbound(fn){ status.in='busy'; paintStatus(); try{ const res=await fn(); status.in='ok'; status.lastInOkAt=Date.now(); paintStatus(); return res; } catch(e){ status.in='err'; status.lastError=(e&&e.message)?e.message:String(e); paintStatus(); throw e; } finally{ setTimeout(()=>{ if(status.in==='ok') status.in='idle'; paintStatus(); },700); } }
 async function doSync(){ status.sync='busy'; status.out='busy'; paintStatus();
   try{ await trySync(); status.sync='ok'; status.lastSyncOkAt=Date.now(); const left=parseOutbox().length; status.out = left>0 ? 'busy' : 'ok'; }
@@ -552,7 +561,7 @@ async function trySync(){
   gearBadgeRefresh();
 }
 
-/* ===== UI Oggi ===== */
+/* ===== UI: oggi ===== */
 function updateOggiUI(){
   const data=parseLS(); const t=todayLocalISO(); ensureDay(t); const day=data[t];
   $('#startTime').textContent=day.start||'08:00';
@@ -589,46 +598,45 @@ function recordAction(){
   withFrozenScroll(updateOggiUI); toast('Registrato'); trySync();
 }
 
-/* ===== UI Recenti ===== */
+/* ===== UI: recenti (mese corrente) ===== */
 let recentiFromCloud=false;
-function fmtLastCloud(ts){ if(!ts) return '—'; const diff=Date.now()-ts; const mins=Math.floor(diff/60000), hrs=Math.floor(mins/60), days=Math.floor(hrs/24);
+const fmtLastCloud=ts=>{ if(!ts) return '—'; const diff=Date.now()-ts; const mins=Math.floor(diff/60000), hrs=Math.floor(mins/60), days=Math.floor(hrs/24);
   const rel = mins<60 ? `${mins} min fa` : (hrs<48?`${hrs} h fa`:`${days} giorni fa`); const dt=new Date(ts);
   const dd=String(dt.getDate()).padStart(2,'0'), mm=String(dt.getMonth()+1).padStart(2,'0'), yy=dt.getFullYear();
-  const hh=String(dt.getHours()).padStart(2,'0'), mi=String(dt.getMinutes()).padStart(2,'0'); return `${rel} — ${dd}-${mm}-${yy} ${hh}:${mi}`; }
-async function getMonthMap(ym){
-  const res={}; const [Y,M]=ym.split('-').map(n=>parseInt(n,10)); const days=new Date(Y,M,0).getDate();
-  const local=parseLS(); let mapCloud=null;
-  if(navigator.onLine){ try{ mapCloud=await inbound(()=>fetchCloudLast(370)); }catch(e){ mapCloud=null; } }
-  recentiFromCloud=!!mapCloud;
-  for(let i=1;i<=days;i++){ const iso=`${Y}-${String(M).padStart(2,'0')}-${String(i).padStart(2,'0')}`; res[iso]=(mapCloud&&mapCloud[iso])||local[iso]||{}; }
-  if(mapCloud){ const cfg=cfgEnsureDefaults(); cfg.lastCloudMapAt_ms=Date.now(); saveCFG(cfg); }
-  return res;
-}
-function flagHTMLByExtra(e){ const cls=classifyExtra(e);
-  if(cls==='red') return '<span style="color:#FF5C5C">●</span>';
-  if(cls==='green') return '<span style="color:#7DFFA3">✔︎</span>';
-  if(cls==='yellow') return '<span style="color:#FFD65C">●</span>';
-  return '';
-}
+  const hh=String(dt.getHours()).padStart(2,'0'), mi=String(dt.getMinutes()).padStart(2,'0'); return `${rel} — ${dd}-${mm}-${yy} ${hh}:${mi}`; };
 async function updateRecentiUI(){
   const list=$('#recentiList'); if(!list) return; list.innerHTML='';
-  const ym=ymCurrent(); const map=await getMonthMap(ym); const [Y,M]=ym.split('-').map(n=>parseInt(n,10)); const days=new Date(Y,M,0).getDate();
+  const ym=ymCurrent(); const {map,fromCloud}=await getMonthMap(ym); recentiFromCloud=fromCloud;
+  const [Y,M]=ym.split('-').map(n=>parseInt(n,10)); const days=new Date(Y,M,0).getDate();
+
   for(let i=1;i<=days;i++){
     const iso=`${Y}-${String(M).padStart(2,'0')}-${String(i).padStart(2,'0')}`; const wd=new Date(iso+'T00:00:00').getDay(); const rec=map[iso]||{};
-    const extra=computeExtra(rec); const extraStr=(extra===null)?'—':`${extra>=0?'+':'−'}${hhmmFromMinutes(Math.abs(extra))}`; const flag=flagHTMLByExtra(extra);
+    const extra=computeExtra(rec); const extraStr=(extra===null)?'—':`${extra>=0?'+':'−'}${hhmmFromMinutes(Math.abs(extra))}`;
+    const cls=classifyExtra(extra);
+    const flag = cls==='red'   ? '<span style="color:#FF5C5C">●</span>' :
+                 cls==='green' ? '<span style="color:#7DFFA3">✔︎</span>' :
+                 cls==='yellow'? '<span style="color:#FFD65C">●</span>' : '';
     const el=document.createElement('div'); el.className='item'+((wd===0||wd===6)?' weekend':'');
     el.innerHTML=`<div class="muted">${toEU(iso)} ${weekdayName(wd)}</div><div class="extra">${flag}<span>${extraStr}</span></div><button class="editbtn" data-date="${iso}">Modifica</button>`;
     el.addEventListener('click',ev=>{ if(ev.target&&ev.target.classList.contains('editbtn')) return; openDayDetail(iso); });
     el.querySelector('.editbtn').addEventListener('click',ev=>{ ev.stopPropagation(); openDayDetail(iso); });
     list.appendChild(el);
   }
-  // Totale + badge conteggio
-  let total=null; try{ const t=await inbound(()=>monthTotalFromCloud(ym)); if(typeof t==='number') total=t; }catch(e){}
-  if(total===null) total=sumMonthLocal(ym);
+
+  // Totale + badge conteggio dalla stessa mappa (nessun doppio conteggio)
+  let total=0,g=0,y=0,r=0;
+  for(const iso of Object.keys(map)){
+    if(!iso.startsWith(ym)) continue;
+    const e=computeExtra(map[iso]||{});
+    if(e!==null){
+      total+=e; const c=classifyExtra(e);
+      if(c==='green') g++; else if(c==='yellow') y++; else if(c==='red') r++;
+    }
+  }
   $('#currentMonthTotal').style.display='grid'; const s=total>=0?'+':'−'; $('#currentMonthTotalValue').textContent=`${s}${hhmmFromMinutes(Math.abs(total))}`;
   $('#sourceBadge2').textContent=`[${recentiFromCloud?'Cloud':'Locale'}]`;
   const cfg=cfgEnsureDefaults(); $('#lastCloud2').textContent=fmtLastCloud(cfg.lastCloudMapAt_ms||0);
-  const cnt=monthCounts(ym); $('#rcGreen').textContent=cnt.green; $('#rcYellow').textContent=cnt.yellow; $('#rcRed').textContent=cnt.red;
+  $('#rcGreen').textContent=g; $('#rcYellow').textContent=y; $('#rcRed').textContent=r;
   paintStatus();
 }
 
@@ -648,42 +656,25 @@ function renderDayRows(dateISO){
 function openDayDetail(d){ $('#dayTitle').textContent=`Giornata ${toEU(d)}`; renderDayRows(d); $('#modalDay').classList.add('show'); $('#modalDay').setAttribute('aria-hidden','false'); }
 function closeDayDetail(){ $('#modalDay').classList.remove('show'); $('#modalDay').setAttribute('aria-hidden','true'); }
 
-/* ===== UI: totale ===== */
-<script>
+/* ===== UI: totale (mese scorso) ===== */
 async function updateTotaleUI(){
-  const ym = ymPrev();
-  const [Y,M] = ym.split('-').map(n=>parseInt(n,10));
-  const name = `${monthsIt()[M-1]} ${Y}`;
-  $('#lastMonthTitle').textContent = `Totale mese scorso — ${name}`;
+  const ym=ymPrev(); const [Y,M]=ym.split('-').map(n=>parseInt(n,10)); const name=`${monthsIt()[M-1]} ${Y}`;
+  $('#lastMonthTitle').textContent=`Totale mese scorso — ${name}`;
 
-  // Somma e conteggi dalla stessa mappa (coerenti, 1 riga/giorno)
   let total=0, counts={green:0,yellow:0,red:0};
   try{
-    const res = await sumAndCountsFromMap(ym);
-    total = res.total; counts = res.counts;
-    // timestamp ultimo cloud map
-    const cfg = cfgEnsureDefaults();
-    if(navigator.onLine){ cfg.lastCloudMonthAt_ms = cfg.lastCloudMonthAt_ms||{}; cfg.lastCloudMonthAt_ms[ym] = Date.now(); saveCFG(cfg); }
-    const ts = (cfg.lastCloudMonthAt_ms && cfg.lastCloudMonthAt_ms[ym]) || (cfg.lastCloudMapAt_ms || 0);
-    $('#lastCloud3').textContent = fmtLastCloud(ts);
+    const res=await sumAndCountsFromMap(ym);
+    total=res.total; counts=res.counts;
+    const cfg=cfgEnsureDefaults(); cfg.lastCloudMonthAt_ms=cfg.lastCloudMonthAt_ms||{}; cfg.lastCloudMonthAt_ms[ym]=Date.now(); saveCFG(cfg);
+    const ts=(cfg.lastCloudMonthAt_ms&&cfg.lastCloudMonthAt_ms[ym]) || (cfg.lastCloudMapAt_ms||0);
+    $('#lastCloud3').textContent=fmtLastCloud(ts);
   }catch(e){
-    // fallback locale in caso di errore
-    total = sumMonthLocal(ym);
-    const cnt = monthCounts(ym);
-    counts = cnt;
+    total=sumMonthLocal(ym); counts=monthCounts(ym);
   }
-
-  const s = total>=0?'+':'−';
-  $('#bigTotal').textContent = `${s}${hhmmFromMinutes(Math.abs(total))}`;
-  const spans = $$('#badgeGreen span, #badgeYellow span, #badgeRed span');
-  spans[0].textContent = counts.green;
-  spans[1].textContent = counts.yellow;
-  spans[2].textContent = counts.red;
-
+  const s=total>=0?'+':'−'; $('#bigTotal').textContent=`${s}${hhmmFromMinutes(Math.abs(total))}`;
+  const spans=$$('#badgeGreen span, #badgeYellow span, #badgeRed span'); spans[0].textContent=counts.green; spans[1].textContent=counts.yellow; spans[2].textContent=counts.red;
   paintStatus();
 }
-</script>
-
 
 /* ===== Month picker ===== */
 function buildMonthOptions(){ const sel=$('#pickMonth'); sel.innerHTML=''; const now=new Date(); const m=monthsIt();
@@ -693,34 +684,15 @@ function buildMonthOptions(){ const sel=$('#pickMonth'); sel.innerHTML=''; const
 }
 function openMonthPicker(){ buildMonthOptions(); $('#modalMonth').classList.add('show'); $('#modalMonth').setAttribute('aria-hidden','false'); }
 function closeMonthPicker(){ $('#modalMonth').classList.remove('show'); $('#modalMonth').setAttribute('aria-hidden','true'); }
-<script>
 async function confirmMonthPicker(){
-  const ym = $('#pickMonth').value;
-  closeMonthPicker();
-
+  const ym=$('#pickMonth').value; closeMonthPicker();
   let total=0, counts={green:0,yellow:0,red:0};
-  try{
-    const res = await sumAndCountsFromMap(ym);
-    total = res.total; counts = res.counts;
-  }catch(e){
-    total = sumMonthLocal(ym);
-    counts = monthCounts(ym);
-  }
-
-  $('#monthResultTitle').textContent = `Totale ${ym}`;
-  const s = total>=0?'+':'−';
-  $('#monthResultValue').textContent = `${s}${hhmmFromMinutes(Math.abs(total))}`;
-
-  const spans = $$('#monthResultBadges .badge span');
-  spans[0].textContent = counts.green;
-  spans[1].textContent = counts.yellow;
-  spans[2].textContent = counts.red;
-
-  $('#modalMonthResult').classList.add('show');
-  $('#modalMonthResult').setAttribute('aria-hidden','false');
+  try{ const res=await sumAndCountsFromMap(ym); total=res.total; counts=res.counts; }
+  catch(e){ total=sumMonthLocal(ym); counts=monthCounts(ym); }
+  $('#monthResultTitle').textContent=`Totale ${ym}`; const s=total>=0?'+':'−'; $('#monthResultValue').textContent=`${s}${hhmmFromMinutes(Math.abs(total))}`;
+  const spans=$$('#monthResultBadges .badge span'); spans[0].textContent=counts.green; spans[1].textContent=counts.yellow; spans[2].textContent=counts.red;
+  $('#modalMonthResult').classList.add('show'); $('#modalMonthResult').setAttribute('aria-hidden','false');
 }
-</script>
-
 document.addEventListener('click',e=>{ if(e.target&&e.target.id==='btnMonthResultClose'){ $('#modalMonthResult').classList.remove('show'); $('#modalMonthResult').setAttribute('aria-hidden','true'); } });
 
 /* ===== Picker orari ===== */
@@ -770,28 +742,22 @@ async function testEndpoint(){ const cfg=cfgEnsureDefaults(); const res={};
 let fetchedOnStartup=false, fetchedRecenti=false, fetchedTotale=false;
 async function limitedStartupFetch(){
   if(fetchedOnStartup) return; fetchedOnStartup=true;
-  // Upload eventuale coda, ma niente download multipli
   if(parseOutbox().length>0) await doSync();
   if(navigator.onLine){
-    try{ cloudCacheAll=await inbound(()=>fetchCloudLast(370)); const cfg=cfgEnsureDefaults(); cfg.lastCloudMapAt_ms=Date.now(); saveCFG(cfg);}catch(e){}
-    try{ await inbound(()=>monthTotalFromCloud(ymCurrent())); }catch(e){}
-    try{ const ym=ymPrev(); const t=await inbound(()=>monthTotalFromCloud(ym)); if(typeof t==='number'){ const cfg=cfgEnsureDefaults(); cfg.lastCloudMonthAt_ms=cfg.lastCloudMonthAt_ms||{}; cfg.lastCloudMonthAt_ms[ym]=Date.now(); saveCFG(cfg);} }catch(e){}
+    try{ const {map}=await getMonthMap(ymCurrent()); if(map){} }catch(e){}
+    try{ await monthTotalFromCloud(ymCurrent()); }catch(e){}
+    try{ await monthTotalFromCloud(ymPrev()); }catch(e){}
   }
 }
-
-/* ===== Tabs & listeners ===== */
 function initTabs(){
   $$('.tab').forEach(b=>{
     b.addEventListener('click',async()=>{
       $$('.tab').forEach(x=>x.classList.remove('active')); b.classList.add('active');
       const t=b.getAttribute('data-target'); $$('.page').forEach(p=>p.classList.remove('visible')); $('#'+t).classList.add('visible');
-      // Primo ingresso in pagina: un solo download
-      if(t==='page-recenti' && !fetchedRecenti){
-        fetchedRecenti=true; if(!maybeWarnOffline('recenti')) await updateRecentiUI(); else paintStatus();
-      } else if(t==='page-recenti'){ withFrozenScroll(updateRecentiUI); }
-      if(t==='page-totale' && !fetchedTotale){
-        fetchedTotale=true; if(!maybeWarnOffline('totale')) await updateTotaleUI(); else paintStatus();
-      } else if(t==='page-totale'){ updateTotaleUI(); }
+      if(t==='page-recenti' && !fetchedRecenti){ fetchedRecenti=true; if(!maybeWarnOffline('recenti')) await updateRecentiUI(); else paintStatus(); }
+      else if(t==='page-recenti'){ withFrozenScroll(updateRecentiUI); }
+      if(t==='page-totale' && !fetchedTotale){ fetchedTotale=true; if(!maybeWarnOffline('totale')) await updateTotaleUI(); else paintStatus(); }
+      else if(t==='page-totale'){ updateTotaleUI(); }
       paintStatus();
     });
   });
@@ -802,10 +768,8 @@ function eagerSetup(){ cfgEnsureDefaults(); finalizePastDays(); ensureDay(todayL
 document.addEventListener('DOMContentLoaded', async ()=>{
   initTabs(); eagerSetup();
   await limitedStartupFetch(); // 1 sola volta all’avvio
-  // Non richiamiamo auto-fetch su visibilitychange/online per rispettare la tua richiesta
-  // (restano i bottoni manuali di refresh)
 
-  // Handlers
+  // Main handlers
   $('#btnRegistra').addEventListener('click',recordAction);
   $$('#rowsOggi .btn.ghost').forEach(btn=>{
     btn.addEventListener('click',()=>{
@@ -846,8 +810,8 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   $('#cfgOffWarnEnabled').addEventListener('change',()=>{ saveSettings(); });
 
   // Cloud manuale
-  $('#btnRefreshCloud2').addEventListener('click', async ()=>{ if(!navigator.onLine) return; try{ cloudCacheAll=await inbound(()=>fetchCloudLast(370)); const cfg=cfgEnsureDefaults(); cfg.lastCloudMapAt_ms=Date.now(); saveCFG(cfg);}catch(e){} await updateRecentiUI(); });
-  $('#btnRefreshCloud3').addEventListener('click', async ()=>{ if(!navigator.onLine) return; try{ await inbound(()=>monthTotalFromCloud(ymPrev())); const cfg=cfgEnsureDefaults(); cfg.lastCloudMonthAt_ms=cfg.lastCloudMonthAt_ms||{}; cfg.lastCloudMonthAt_ms[ymPrev()]=Date.now(); saveCFG(cfg);}catch(e){} updateTotaleUI(); });
+  $('#btnRefreshCloud2').addEventListener('click', async ()=>{ if(!navigator.onLine) return; try{ await getMonthMap(ymCurrent()); }catch(e){} await updateRecentiUI(); });
+  $('#btnRefreshCloud3').addEventListener('click', async ()=>{ if(!navigator.onLine) return; try{ await monthTotalFromCloud(ymPrev()); }catch(e){} updateTotaleUI(); });
 
   $('#btnSyncNowTop').addEventListener('click', async ()=>{
     let out=parseOutbox(); if(out.length===0){ const t=todayLocalISO(); const data=parseLS(); if(data&&data[t]) queueOutbox(t,data[t]); }
@@ -860,6 +824,17 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   $('#badgeGreen').addEventListener('click',()=>explain('green'));
   $('#badgeYellow').addEventListener('click',()=>explain('yellow'));
   $('#badgeRed').addEventListener('click',()=>explain('red'));
+
+  // Apri totale mese corrente (pop-up) usando la mappa coerente
+  $('#btnOpenMonthCurrent').addEventListener('click', async ()=>{
+    const ym=ymCurrent();
+    const res=await sumAndCountsFromMap(ym);
+    const total=res.total, counts=res.counts;
+    $('#monthResultTitle').textContent='Totale mese corrente';
+    const s=total>=0?'+':'−'; $('#monthResultValue').textContent=`${s}${hhmmFromMinutes(Math.abs(total))}`;
+    const spans=$$('#monthResultBadges .badge span'); spans[0].textContent=counts.green; spans[1].textContent=counts.yellow; spans[2].textContent=counts.red;
+    $('#modalMonthResult').classList.add('show'); $('#modalMonthResult').setAttribute('aria-hidden','false');
+  });
 });
 </script>
 </body>
