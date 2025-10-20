@@ -1,174 +1,781 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Straordinari</title>
-  <meta name="theme-color" content="#000000" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="styles.css" />
-  <script defer src="app.js"></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Straordinari</title>
+<meta name="theme-color" content="#000000" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<style>
+:root{
+  --bg:#000; --card:#151517; --muted:#7A7A83; --text:#F8F8FA; --brand:#34C759; --danger:#FF453A;
+  --amber:#f4c542; --border:#242428; --shadow:0 8px 30px rgba(0,0,0,0.25); --radius:14px; --greybtn:#2a2a2e;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;padding-bottom:env(safe-area-inset-bottom)}
+.safe-notch{position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top);background:#000;pointer-events:none;z-index:0}
+.app{max-width:680px;margin:0 auto;padding:calc(env(safe-area-inset-top)+8px) 12px calc(12px + env(safe-area-inset-bottom))}
+.tabs{display:flex;align-items:center;gap:8px;margin-bottom:6px;position:relative;z-index:1}
+.tabs-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;flex:1}
+.tab{appearance:none;border:1px solid var(--border);background:#0f0f11;color:#fff;border-radius:12px;padding:10px 12px;font-weight:600}
+.tab.active{outline:2px solid var(--brand)}
+.gear{border:1px solid var(--border);background:#0f0f11;color:#fff;border-radius:12px;padding:10px 12px;position:relative}
+.gear.badge-red::after,.gear.badge-amber::after,.gear.badge-gray::after{
+  content:""; position:absolute; right:6px; top:6px; width:8px; height:8px; border-radius:50%;
+}
+.gear.badge-red::after{ background: var(--danger); }
+.gear.badge-amber::after{ background: var(--amber); }
+.gear.badge-gray::after{ background: #888; }
+
+.page{display:none;margin-top:6px}
+.page.visible{display:block}
+
+.hero{display:flex;flex-direction:column;align-items:center;gap:14px;margin:6px 0 16px}
+.btn-record{width:180px;height:180px;border-radius:50%;border:none;background:var(--brand);color:#073615;font-size:22px;font-weight:800;box-shadow:var(--shadow)}
+.btn-record:active{transform:scale(0.98)}
+.selector{display:flex;flex-direction:column;gap:6px;width:min(420px,100%)}
+.selector select{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0f0f11;color:#fff;font-size:16px}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);margin:14px 0}
+.card h2{margin:4px 0 12px 0;font-size:18px}
+.rows{display:flex;flex-direction:column;gap:10px}
+.row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:12px}
+.row .btn.ghost{background:var(--greybtn);color:#ddd;border:1px solid var(--border)}
+.row.right{justify-content:flex-end;gap:8px}
+.row-actions{display:flex;gap:8px;align-items:center}
+
+.btn{border:none;border-radius:10px;padding:10px 14px;font-weight:700;background:var(--brand);color:#073615}
+.btn.outline{background:transparent;color:#fff;border:1px solid var(--border)}
+.smallbtn{padding:8px 10px;font-size:14px}
+
+.list{display:flex;flex-direction:column;gap:8px}
+.item{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:#0f0f11}
+.item .muted{color:var(--muted);font-variant-numeric:tabular-nums}
+.item .extra{justify-self:end; display:flex; align-items:center; gap:8px}
+.item .editbtn{background:var(--greybtn);color:#ddd;border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-weight:700}
+.item.totalrow{border-style:dashed}
+.item.weekend .muted,.item.weekend .extra{color:#FF453A}
+.badgeSrc{font-size:12px;color:#bbb}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#111;color:#fff;padding:10px 14px;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s;z-index:200}
+.toast.show{opacity:1}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:150}
+.modal.z110{z-index:160}.modal.z120{z-index:170}.modal.z130{z-index:180}.modal.show{display:flex}
+.modal-inner{background:#141416;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:14px;width:min(420px,94vw);max-height:90vh;overflow:auto}
+.modal-inner.narrow{width:min(360px,94vw)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
+
+.readout{font-weight:900;font-size:22px;text-align:center;margin:4px 0}
+.picker{display:flex;align-items:center;justify-content:center;gap:8px;margin:6px 0 2px;flex-wrap:nowrap;max-width:100%}
+.wheel-wrap{transform:scale(0.9);transform-origin:top center}
+.wheel{appearance:none;-webkit-appearance:none;background:#0f0f11;color:#fff;border:1px solid var(--border);border-radius:12px;width:84px;max-width:40vw;height:120px;font-size:18px;line-height:1.2;padding:4px 6px;box-sizing:border-box;overflow:auto;text-align:center}
+.wheel.wide{width:200px;max-width:70vw}.wheel option{padding:6px 0;text-align:center}.colon{font-size:22px;opacity:.8;align-self:center;padding:0 4px}
+@media (max-width:390px){.wheel-wrap{transform:scale(0.85)}.wheel{width:72px;height:110px;font-size:16px}.wheel.wide{width:180px}}
+
+.center{display:flex;justify-content:center;margin:14px 0}
+.big-circle{width:180px;height:180px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#0f0f11;border:2px solid var(--border);box-shadow:var(--shadow);font-weight:900;font-size:22px}
+.big-circle.small{width:160px;height:160px;font-size:20px}
+
+.badges{display:flex; gap:12px; align-items:center}
+.badge{border:1px solid var(--border); background:#0f0f11; color:#fff; border-radius:999px; padding:6px 10px; font-weight:700; display:flex; align-items:center; gap:6px}
+#badgeGreen{color:#7DFFA3}
+#badgeYellow{color:#FFD65C}
+#badgeRed{color:#FF5C5C}
+
+.diag{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:13px; white-space:pre-wrap; background:#0f0f11; border:1px solid var(--border); border-radius:12px; padding:8px}
+.card.soft{background:#101012}
+.chip{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:6px 10px}
+
+.sbox{border:1px dashed var(--border);border-radius:12px;padding:10px}
+.s-ok{outline:1px solid #2e7d32}
+.s-busy{outline:1px solid #b8860b}
+.s-err{outline:1px solid #a30000}
+
+.appver{position:fixed; right:10px; bottom:calc(6px + env(safe-area-inset-bottom)); font-size:12px; color:#fff; opacity:.35; pointer-events:none; z-index:50}
+</style>
 </head>
 <body>
-  <div class="safe-notch" aria-hidden="true"></div>
-  <div class="app">
-    <header class="tabs" role="tablist" aria-label="Sezioni">
-      <div class="tabs-row">
-        <button class="tab active" data-target="page-main" role="tab" aria-selected="true">Pagina principale</button>
-        <button class="tab" data-target="page-recenti" role="tab" aria-selected="false">Orari recenti</button>
-        <button class="tab" data-target="page-totale" role="tab" aria-selected="false">Totale mensile</button>
+<div class="safe-notch" aria-hidden="true"></div>
+<div class="app">
+  <header class="tabs" role="tablist" aria-label="Sezioni">
+    <div class="tabs-row">
+      <button class="tab active" data-target="page-main" role="tab" aria-selected="true">Pagina principale</button>
+      <button class="tab" data-target="page-recenti" role="tab" aria-selected="false">Orari recenti</button>
+      <button class="tab" data-target="page-totale" role="tab" aria-selected="false">Totale mensile</button>
+    </div>
+    <button id="btnSettings" title="Impostazioni" class="gear" aria-label="Impostazioni">⚙️</button>
+  </header>
+
+  <main>
+    <!-- Pagina 1 -->
+    <section id="page-main" class="page visible">
+      <div class="hero">
+        <button id="btnRegistra" class="btn-record"><span>Registra</span></button>
+        <div class="selector">
+          <label for="azione">Voce da registrare</label>
+          <select id="azione">
+            <option value="breakStart">Inizio pausa</option>
+            <option value="breakEnd">Fine pausa</option>
+            <option value="end">Uscita</option>
+          </select>
+        </div>
       </div>
-      <button id="btnSettings" title="Impostazioni cloud" class="gear" aria-label="Impostazioni cloud">⚙️</button>
-    </header>
 
-    <main>
-      <section id="page-main" class="page visible">
-        <div class="hero">
-          <button id="btnRegistra" class="btn-record"><span>Registra</span></button>
-          <div class="selector">
-            <label for="azione">Voce da registrare</label>
-            <select id="azione">
-              <option value="breakStart">Inizio pausa</option>
-              <option value="breakEnd">Fine pausa</option>
-              <option value="end">Uscita</option>
-            </select>
+      <div class="card">
+        <h2>Dati di oggi</h2>
+        <div class="rows" id="rowsOggi">
+          <div class="row">
+            <div>Inizio lavoro</div><div class="time" id="startTime">08:00</div>
+            <button class="btn ghost" data-edit="start">Modifica</button>
+          </div>
+          <div class="row">
+            <div>Inizio pausa</div><div class="time" id="breakStartTime">—</div>
+            <button class="btn ghost" data-edit="breakStart">Modifica</button>
+          </div>
+          <div class="row">
+            <div>Fine pausa</div><div class="time" id="breakEndTime">—</div>
+            <button class="btn ghost" data-edit="breakEnd">Modifica</button>
+          </div>
+          <div class="row">
+            <div>Uscita</div><div class="time" id="endTime">—</div>
+            <button class="btn ghost" data-edit="end">Modifica</button>
           </div>
         </div>
+      </div>
 
-        <div class="card">
-          <h2>Dati di oggi</h2>
-          <div class="rows" id="rowsOggi">
-            <div class="row">
-              <div>Inizio lavoro</div>
-              <div class="time" id="startTime">08:00</div>
-              <button class="btn ghost" data-edit="start">Modifica</button>
-            </div>
-            <div class="row">
-              <div>Inizio pausa</div>
-              <div class="time" id="breakStartTime">—</div>
-              <button class="btn ghost" data-edit="breakStart">Modifica</button>
-            </div>
-            <div class="row">
-              <div>Fine pausa</div>
-              <div class="time" id="breakEndTime">—</div>
-              <button class="btn ghost" data-edit="breakEnd">Modifica</button>
-            </div>
-            <div class="row">
-              <div>Uscita</div>
-              <div class="time" id="endTime">—</div>
-              <button class="btn ghost" data-edit="end">Modifica</button>
-            </div>
-          </div>
-        </div>
+      <div class="card" id="oggiSummary" hidden>
+        <h2>Stima di oggi</h2>
+        <p id="oggiNet"></p>
+        <p id="oggiExtra"></p>
+      </div>
 
-        <div class="card" id="oggiSummary" hidden>
-          <h2>Stima di oggi</h2>
-          <p id="oggiNet"></p>
-          <p id="oggiExtra"></p>
+      <div class="card statusboard" id="statusBoard-main">
+        <h2>Stato</h2>
+        <div class="rows status-grid">
+          <div class="sbox" id="sb-online"><div class="sTitle">Online</div><div class="sSub" id="sb-online-sub">—</div></div>
+          <div class="sbox" id="sb-sync"><div class="sTitle">Sync</div><div class="sSub" id="sb-sync-sub">—</div></div>
+          <div class="sbox" id="sb-out"><div class="sTitle">Uscita → Excel</div><div class="sSub" id="sb-out-sub">—</div></div>
+          <div class="sbox" id="sb-in"><div class="sTitle">Ingresso ← Excel</div><div class="sSub" id="sb-in-sub">—</div></div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section id="page-recenti" class="page">
-        <div class="row right compact">
-          <button id="btnSyncNowTop" class="btn outline smallbtn">Sincronizza ora</button>
+    <!-- Pagina 2 -->
+    <section id="page-recenti" class="page">
+      <div class="card statusboard" id="statusBoard-recenti">
+        <h2>Stato</h2>
+        <div class="rows status-grid">
+          <div class="sbox" id="sb-online"><div class="sTitle">Online</div><div class="sSub" id="sb-online-sub">—</div></div>
+          <div class="sbox" id="sb-sync"><div class="sTitle">Sync</div><div class="sSub" id="sb-sync-sub">—</div></div>
+          <div class="sbox" id="sb-out"><div class="sTitle">Uscita → Excel</div><div class="sSub" id="sb-out-sub">—</div></div>
+          <div class="sbox" id="sb-in"><div class="sTitle">Ingresso ← Excel</div><div class="sSub" id="sb-in-sub">—</div></div>
         </div>
-        <div class="card">
-          <h2>Mese corrente</h2>
-          <div id="recentiList" class="list"></div>
-        </div>
-      </section>
+      </div>
 
-      <section id="page-totale" class="page">
-        <div class="center">
-          <div id="bigTotal" class="big-circle">—</div>
-        </div>
-        <div class="center">
-          <button id="btnVerificaMesi" class="btn">Verifica mesi precedenti</button>
-        </div>
-      </section>
-    </main>
-
-    <!-- Settings + Diagnostica -->
-    <div id="modalSettings" class="modal" aria-hidden="true">
-      <div class="modal-inner">
-        <h3>Impostazioni cloud</h3>
+      <div class="card soft" id="cloudInfo2">
+        <h2 style="margin-top:0">Ultimo aggiornamento dal cloud</h2>
         <div class="rows">
-          <div class="row"><div>Abilita sync</div><div><input id="cfgSyncEnabled" type="checkbox" /></div></div>
-          <div class="row"><div>URL endpoint</div><div><input id="cfgSyncUrl" type="url" placeholder="https://script.google.com/..." /></div></div>
-          <div class="row"><div>Token (opz.)</div><div><input id="cfgSyncToken" type="text" placeholder="segredo personale" /></div></div>
-        </div>
-
-        <div class="card soft">
-          <h3 style="margin:0 0 8px 0">Diagnostica</h3>
-          <div id="diagStatus" class="diag"></div>
-          <div class="modal-actions wrap">
-            <button id="btnDiagRefresh" class="btn outline">Aggiorna stato</button>
-            <button id="btnDiagTest" class="btn">Test endpoint</button>
+          <div class="row">
+            <div class="muted">Lista mese corrente</div>
+            <div id="lastCloud2" class="muted">—</div>
+            <button class="btn outline smallbtn" id="btnRefreshCloud2">Aggiorna dal cloud</button>
           </div>
         </div>
+      </div>
 
-        <div class="modal-actions wrap">
-          <button id="btnSettingsSave" class="btn">Salva</button>
-          <button id="btnSettingsSync" class="btn outline">Sincronizza ora</button>
-          <button id="btnSettingsClose" class="btn">Chiudi</button>
+      <div class="row right compact">
+        <button id="btnSyncNowTop" class="btn outline smallbtn">Sincronizza ora</button>
+      </div>
+      <div class="card">
+        <h2>Mese corrente <span id="sourceBadge2" class="badgeSrc">[—]</span></h2>
+        <div id="recentiList" class="list"></div>
+        <div id="currentMonthTotal" class="item totalrow" style="display:none; margin-top:8px;">
+          <div class="muted">Totale mese corrente</div>
+          <div class="extra" id="currentMonthTotalValue">—</div>
+          <button class="editbtn" id="btnOpenMonthCurrent">Apri</button>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div id="modalDay" class="modal z110" aria-hidden="true">
-      <div class="modal-inner">
-        <h3 id="dayTitle">Giornata</h3>
-        <div class="rows" id="dayRows"></div>
-        <div class="modal-actions wrap">
-          <button id="btnDayClose" class="btn">Chiudi</button>
+    <!-- Pagina 3 -->
+    <section id="page-totale" class="page">
+      <div class="card statusboard" id="statusBoard-totale">
+        <h2>Stato</h2>
+        <div class="rows status-grid">
+          <div class="sbox" id="sb-online"><div class="sTitle">Online</div><div class="sSub" id="sb-online-sub">—</div></div>
+          <div class="sbox" id="sb-sync"><div class="sTitle">Sync</div><div class="sSub" id="sb-sync-sub">—</div></div>
+          <div class="sbox" id="sb-out"><div class="sTitle">Uscita → Excel</div><div class="sSub" id="sb-out-sub">—</div></div>
+          <div class="sbox" id="sb-in"><div class="sTitle">Ingresso ← Excel</div><div class="sSub" id="sb-in-sub">—</div></div>
         </div>
       </div>
-    </div>
 
-    <div id="modalPicker" class="modal z120" aria-hidden="true">
-      <div class="modal-inner narrow">
-        <div class="readout" id="pickerReadout">00:00</div>
-        <div class="picker">
-          <div class="wheel-wrap"><select id="pickHour" size="5" class="wheel"></select></div>
-          <span class="colon">:</span>
-          <div class="wheel-wrap"><select id="pickMin" size="5" class="wheel"></select></div>
-        </div>
-        <div class="modal-actions wrap">
-          <button id="btnPickerOk" class="btn">Correggi</button>
-          <button id="btnPickerCancel" class="btn outline">Annulla</button>
+      <div class="card soft" id="cloudInfo3">
+        <h2 style="margin-top:0">Ultimo aggiornamento dal cloud</h2>
+        <div class="rows">
+          <div class="row">
+            <div class="muted">Totale mese selezionato</div>
+            <div id="lastCloud3" class="muted">—</div>
+            <button class="btn outline smallbtn" id="btnRefreshCloud3">Aggiorna dal cloud</button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div id="modalMonth" class="modal z120" aria-hidden="true">
-      <div class="modal-inner narrow">
-        <h3>Seleziona mese</h3>
-        <div class="picker">
-          <div class="wheel-wrap"><select id="pickMonth" size="5" class="wheel wide"></select></div>
-        </div>
-        <div class="modal-actions wrap">
-          <button id="btnMonthOk" class="btn">Conferma</button>
-          <button id="btnMonthCancel" class="btn outline">Annulla</button>
+      <div class="center">
+        <h2 id="lastMonthTitle" style="margin:0 0 8px 0; text-align:center;"></h2>
+      </div>
+      <div class="center">
+        <div id="bigTotal" class="big-circle">—</div>
+      </div>
+      <div class="center">
+        <div id="monthBadges" class="badges" aria-live="polite">
+          <button class="badge" id="badgeGreen" title="Giorni con >0 e ≤3h">✔︎ <span>0</span></button>
+          <button class="badge" id="badgeYellow" title="Giorni sotto 0h">● <span>0</span></button>
+          <button class="badge" id="badgeRed" title="Giorni oltre 3h">● <span>0</span></button>
         </div>
       </div>
-    </div>
+      <div class="center">
+        <button id="btnVerificaMesi" class="btn">Verifica mesi precedenti</button>
+      </div>
+    </section>
+  </main>
 
-    <div id="modalMonthResult" class="modal z120" aria-hidden="true">
-      <div class="modal-inner">
-        <h3 id="monthResultTitle">Totale mese</h3>
-        <div class="center"><div id="monthResultValue" class="big-circle small">—</div></div>
-        <div class="modal-actions wrap">
-          <button id="btnMonthResultClose" class="btn">Chiudi</button>
+  <!-- Modali -->
+  <div id="modalSettings" class="modal" aria-hidden="true">
+    <div class="modal-inner">
+      <h3>Impostazioni</h3>
+      <div class="rows">
+        <div class="row"><div>Abilita sync</div><div><input id="cfgSyncEnabled" type="checkbox" /></div></div>
+        <div class="row"><div>URL endpoint</div><div><input id="cfgSyncUrl" type="url" placeholder="https://script.google.com/..." /></div></div>
+        <div class="row"><div>Token (opz.)</div><div><input id="cfgSyncToken" type="text" placeholder="segredo personale" /></div></div>
+      </div>
+
+      <div class="card soft">
+        <h3 style="margin:0 0 8px 0">Avvisi</h3>
+        <div class="rows">
+          <div class="row">
+            <div>Mostra avvisi offline (Storico/Totali)<br><small class="muted">Puoi sospenderli per 24h</small></div>
+            <div><input id="cfgOffWarnEnabled" type="checkbox" /></div>
+          </div>
+          <div class="row">
+            <div id="offWarnChip" class="chip muted">Avvisi attivi</div>
+            <div class="row-actions">
+              <button id="btnSnoozeOffWarn" class="btn outline smallbtn">Sospendi per 24h</button>
+              <button id="btnOffWarnResume" class="btn outline smallbtn" style="display:none">Riattiva ora</button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+      <div class="card soft" id="diagCard">
+        <h3 style="margin:0 0 8px 0">Diagnostica</h3>
+        <div id="diagStatus" class="diag"></div>
+        <div class="modal-actions wrap">
+          <button id="btnDiagRefresh" class="btn outline">Aggiorna stato</button>
+          <button id="btnDiagTest" class="btn">Test endpoint</button>
+        </div>
+      </div>
+
+      <div class="modal-actions wrap">
+        <button id="btnSettingsSave" class="btn">Salva</button>
+        <button id="btnSettingsSync" class="btn outline">Sincronizza ora</button>
+        <button id="btnSettingsClose" class="btn">Chiudi</button>
+      </div>
+    </div>
   </div>
 
-  <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js');});}</script>
+  <div id="modalDay" class="modal z110" aria-hidden="true">
+    <div class="modal-inner">
+      <h3 id="dayTitle">Giornata</h3>
+      <div class="rows" id="dayRows"></div>
+      <div class="modal-actions wrap">
+        <button id="btnDaySetStd" class="btn outline">Set standard</button>
+        <button id="btnDayClose" class="btn">Chiudi</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalPicker" class="modal z120" aria-hidden="true">
+    <div class="modal-inner narrow">
+      <div class="readout" id="pickerReadout">00:00</div>
+      <div class="picker">
+        <div class="wheel-wrap"><select id="pickHour" size="5" class="wheel"></select></div>
+        <span class="colon">:</span>
+        <div class="wheel-wrap"><select id="pickMin" size="5" class="wheel"></select></div>
+      </div>
+      <div class="modal-actions wrap">
+        <button id="btnPickerOk" class="btn">Correggi</button>
+        <button id="btnPickerCancel" class="btn outline">Annulla</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalMonth" class="modal z120" aria-hidden="true">
+    <div class="modal-inner narrow">
+      <h3>Seleziona mese</h3>
+      <div class="picker"><div class="wheel-wrap"><select id="pickMonth" size="5" class="wheel wide"></select></div></div>
+      <div class="modal-actions wrap">
+        <button id="btnMonthOk" class="btn">Conferma</button>
+        <button id="btnMonthCancel" class="btn outline">Annulla</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalMonthResult" class="modal z120" aria-hidden="true">
+    <div class="modal-inner">
+      <h3 id="monthResultTitle">Totale mese</h3>
+      <div class="center"><div id="monthResultValue" class="big-circle small">—</div></div>
+      <div class="center">
+        <div id="monthResultBadges" class="badges">
+          <span class="badge" data-tip="Giorni con >0 e ≤3h">✔︎ <span>0</span></span>
+          <span class="badge" data-tip="Giorni sotto 0h">● <span>0</span></span>
+          <span class="badge" data-tip="Giorni oltre 3h">● <span>0</span></span>
+        </div>
+      </div>
+      <div class="modal-actions wrap">
+        <button id="btnMonthResultClose" class="btn">Chiudi</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalOffline" class="modal z130" aria-hidden="true">
+    <div class="modal-inner">
+      <h3>Modalità offline</h3>
+      <p>Questa sezione usa i dati del Foglio Excel. Al momento sei offline: i valori potrebbero essere <b>incompleti o non aggiornati</b>. Verranno mostrati i <b>dati locali</b> salvati sul dispositivo.</p>
+      <div class="rows">
+        <label><input type="checkbox" id="offWarnNoMoreSession" /> Non mostrare più in questa sessione</label>
+      </div>
+      <div class="modal-actions wrap">
+        <button id="btnOfflineLocal" class="btn">Mostra dati locali</button>
+        <button id="btnOfflineSettings" class="btn outline">Apri Impostazioni</button>
+        <button id="btnOfflineRetry" class="btn outline">Riprova</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div class="appver" aria-hidden="true">v6.2.0</div>
+</div>
+
+<script>
+/* ===== Config & util ===== */
+const LS_KEY='workdays_v1',CFG_KEY='workcfg_v6_2',OUTBOX_KEY='work_outbox_v1';
+const DEFAULT_ENDPOINT='https://script.google.com/macros/s/AKfycbxKOW0oOMZRlwp6d3XX2pUtQLzI6X4FP7nfIpW0fzBJ5IVbGgujLAW31bLTqT6ml88f/exec';
+const APP_VER='6.2.0';
+const $=(s,e=document)=>e.querySelector(s),$$=(s,e=document)=>[...e.querySelectorAll(s)];
+const todayLocalISO=()=>{const d=new Date();return[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');};
+const minutesFromHHMM=h=>(!h||!h.includes(':'))?0:(h.split(':').map(Number)[0]*60 + h.split(':').map(Number)[1]);
+const hhmmFromMinutes=m=>{const sign=m<0?'-':'';const mm=Math.abs(m),h=Math.floor(mm/60),n=mm%60;return `${sign}${String(h).padStart(2,'0')}:${String(n).padStart(2,'0')}`;}
+const nowHHMM=()=>{const d=new Date();return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
+const after1730=()=>{const d=new Date();return d.getHours()>17 || (d.getHours()===17 && d.getMinutes()>=30);};
+const parseLS=()=>{try{return JSON.parse(localStorage.getItem(LS_KEY))||{}}catch{return {}}}
+const saveLS=o=>localStorage.setItem(LS_KEY,JSON.stringify(o));
+const parseCFG=()=>{try{return JSON.parse(localStorage.getItem(CFG_KEY))||{}}catch{return {}}}
+const saveCFG=c=>localStorage.setItem(CFG_KEY,JSON.stringify(c));
+const parseOutbox=()=>{try{return JSON.parse(localStorage.getItem(OUTBOX_KEY))||[]}catch{return []}}
+const saveOutbox=a=>localStorage.setItem(OUTBOX_KEY,JSON.stringify(a));
+const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)}
+const monthsIt=()=>['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const toEU=iso=>{if(!iso) return ''; const [Y,M,D]=iso.split('-'); return `${D}-${M}-${Y}`;}
+const weekdayName=d=>['Dom','Lun','Mar','Mer','Gio','Ven','Sab'][d];
+const ymCurrent=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;}
+const ymPrev=()=>{const d=new Date();const p=new Date(d.getFullYear(), d.getMonth()-1, 1);return `${p.getFullYear()}-${String(p.getMonth()+1).padStart(2,'0')}`;}
+const withFrozenScroll=cb=>{const x=window.scrollX,y=window.scrollY;const ae=document.activeElement;try{if(typeof cb==='function')cb();}finally{if(ae&&ae.blur)ae.blur();window.scrollTo(x,y);}}
+
+/* ===== Stato UI ===== */
+const status={online:navigator.onLine?'ok':'err',sync:'idle',out:'idle',in:'idle',lastSyncOkAt:null,lastInOkAt:null,lastError:null};
+function gearBadgeRefresh(){const g=$('#btnSettings')||$('.gear'); if(!g) return;
+  g.classList.remove('badge-red','badge-amber','badge-gray'); const out=parseOutbox(); const hasQueue=out.length>0;
+  if(status.sync==='err'||status.in==='err') g.classList.add('badge-red');
+  else if(status.sync==='busy'||status.in==='busy'||hasQueue) g.classList.add('badge-amber');
+  else if(!navigator.onLine) g.classList.add('badge-gray');
+}
+function paintStatus(){
+  const apply=(id,st,sub)=>{$$('#'+id).forEach(el=>{el.classList.remove('s-ok','s-busy','s-err'); if(st==='ok')el.classList.add('s-ok'); if(st==='busy')el.classList.add('s-busy'); if(st==='err')el.classList.add('s-err');});
+    $$('#'+id+'-sub').forEach(el=>el.textContent=sub||'—');};
+  apply('sb-online',navigator.onLine?'ok':'err',navigator.onLine?'Connesso':'Offline');
+  let syncSub='—'; if(status.sync==='busy')syncSub='In corso…'; else if(status.sync==='ok')syncSub=status.lastSyncOkAt?('OK '+new Date(status.lastSyncOkAt).toLocaleTimeString()):'OK'; else if(status.sync==='err')syncSub=status.lastError?('Errore: '+status.lastError):'Errore';
+  apply('sb-sync',status.sync==='idle'?'ok':status.sync,syncSub);
+  const out=parseOutbox(); apply('sb-out',status.out==='idle'?'ok':status.out,(out.length>0)?`In coda: ${out.length}`:'Vuota');
+  let inSub='—'; if(status.in==='busy')inSub='Scarico dati…'; else if(status.in==='ok')inSub=status.lastInOkAt?('OK '+new Date(status.lastInOkAt).toLocaleTimeString()):'OK'; else if(status.in==='err')inSub=status.lastError?('Errore: '+status.lastError):'Errore';
+  apply('sb-in',status.in==='idle'?'ok':status.in,inSub);
+  $$('.appver').forEach(el=>el.textContent='v'+APP_VER);
+  gearBadgeRefresh();
+}
+window.addEventListener('online',()=>{status.online='ok';paintStatus();});
+window.addEventListener('offline',()=>{status.online='err';paintStatus();});
+
+/* ===== Config defaults ===== */
+function cfgEnsureDefaults(){
+  let cfg=parseCFG(), changed=false;
+  if(!cfg.startFixed){ cfg.startFixed='08:00'; changed=true; }
+  if(!cfg.defBreakStart){ cfg.defBreakStart='12:30'; changed=true; }
+  if(!cfg.defBreakEnd){ cfg.defBreakEnd='14:00'; changed=true; }
+  if(!cfg.defEnd){ cfg.defEnd='17:30'; changed=true; }
+  if(typeof cfg.syncEnabled==='undefined'){ cfg.syncEnabled=true; changed=true; }
+  if(!cfg.syncUrl){ cfg.syncUrl=DEFAULT_ENDPOINT; changed=true; }
+  if(!cfg.syncToken){ cfg.syncToken=''; changed=true; }
+  if(!cfg.lastCloudMonthAt_ms){ cfg.lastCloudMonthAt_ms={}; changed=true; }
+  if(typeof cfg.offWarnEnabled==='undefined'){ cfg.offWarnEnabled=true; changed=true; }
+  if(!cfg.offwarn_snooze_until_ts){ cfg.offwarn_snooze_until_ts=0; changed=true; }
+  if(!cfg.offwarn_hard_disable_until_ts){ cfg.offwarn_hard_disable_until_ts=0; changed=true; }
+  if(changed) saveCFG(cfg);
+  return parseCFG();
+}
+
+/* ===== Dati & calcoli ===== */
+function ensureDay(d){
+  const data=parseLS(); if(!data[d]) data[d]={start:null,breakStart:null,breakEnd:null,end:null,finalized:false,updatedAt:Date.now()};
+  const cfg=cfgEnsureDefaults(); if(!data[d].start) data[d].start=cfg.startFixed||'08:00'; data[d].updatedAt=Date.now(); saveLS(data);
+}
+function finalizePastDays(){
+  const data=parseLS(), cfg=cfgEnsureDefaults(), t=todayLocalISO(); let ch=false;
+  Object.keys(data).forEach(k=>{
+    if(k<t && !data[k].finalized){
+      const day=data[k];
+      if(!day.start) day.start=cfg.startFixed||'08:00';
+      if(!day.breakStart) day.breakStart=cfg.defBreakStart||'12:30';
+      if(!day.breakEnd)   day.breakEnd  =cfg.defBreakEnd||'14:00';
+      if(!day.end)        day.end       =cfg.defEnd||'17:30';
+      day.finalized=true; day.updatedAt=Date.now(); queueOutbox(k,day); ch=true;
+    }
+  });
+  if(ch) saveLS(data);
+}
+function computeNetDay(d){ if(!(d.start&&d.breakStart&&d.breakEnd&&d.end)) return null;
+  return (minutesFromHHMM(d.breakStart)-minutesFromHHMM(d.start)) + (minutesFromHHMM(d.end)-minutesFromHHMM(d.breakEnd));}
+function computeExtra(d){ const n=computeNetDay(d); if(n===null) return null; return n-480; }
+/* classi: rosso >180; verde 1..180; giallo <0; 0 = neutro */
+function classifyExtra(mins){ if(mins===null) return ''; if(mins>180) return 'red'; if(mins>0 && mins<=180) return 'green'; if(mins<0) return 'yellow'; return ''; }
+
+let cloudCacheAll=null;
+
+/* ===== Cloud ===== */
+async function fetchCloudLast(days=370){
+  const cfg=cfgEnsureDefaults(); if(!cfg.syncEnabled||!cfg.syncUrl) return null;
+  const headers={}; if(cfg.syncToken) headers['X-Auth']=cfg.syncToken;
+  const r=await fetch(cfg.syncUrl+`?op=last&days=${days}`,{headers});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const arr=await r.json(); const map={};
+  if(Array.isArray(arr)){ for(const a of arr){ map[a.date]={start:a.start||null,breakStart:a.breakStart||null,breakEnd:a.breakEnd||null,end:a.end||null,finalized:!!a.finalized}; } }
+  return map;
+}
+async function monthTotalFromCloud(ym){
+  const cfg=cfgEnsureDefaults(); if(!cfg.syncEnabled||!cfg.syncUrl) return null;
+  const headers={}; if(cfg.syncToken) headers['X-Auth']=cfg.syncToken;
+  const r=await fetch(`${cfg.syncUrl}?op=month&ym=${encodeURIComponent(ym)}`,{headers});
+  if(!r.ok) return null; const js=await r.json();
+  return (js&&typeof js.totalExtraMinutes==='number')?js.totalExtraMinutes:null;
+}
+function sumMonthLocal(ym){
+  const data=parseLS(); let tot=0;
+  for(const k of Object.keys(data)){ if(k.startsWith(ym)){ const e=computeExtra(data[k]); if(e!==null) tot+=e; } }
+  return tot;
+}
+function monthCounts(ym){
+  const data = cloudCacheAll || parseLS(); let g=0,y=0,r=0;
+  for(const k of Object.keys(data)){ if(k.startsWith(ym)){ const e=computeExtra(data[k]); const cls=classifyExtra(e);
+    if(cls==='green') g++; else if(cls==='yellow') y++; else if(cls==='red') r++;
+  } }
+  return {green:g,yellow:y,red:r};
+}
+async function inbound(fn){ status.in='busy'; paintStatus(); try{ const res=await fn(); status.in='ok'; status.lastInOkAt=Date.now(); paintStatus(); return res; } catch(e){ status.in='err'; status.lastError=(e&&e.message)?e.message:String(e); paintStatus(); throw e; } finally{ setTimeout(()=>{ if(status.in==='ok') status.in='idle'; paintStatus(); },700); } }
+async function doSync(){ status.sync='busy'; status.out='busy'; paintStatus();
+  try{ await trySync(); status.sync='ok'; status.lastSyncOkAt=Date.now(); const left=parseOutbox().length; status.out = left>0 ? 'busy' : 'ok'; }
+  catch(e){ status.sync='err'; status.out='err'; status.lastError=(e&&e.message)?e.message:String(e); }
+  finally{ paintStatus(); setTimeout(()=>{ if(status.out==='ok') status.out='idle'; if(status.sync==='ok') status.sync='idle'; paintStatus(); },900); } }
+function queueOutbox(dateISO,day){
+  const out=parseOutbox(); const idx=out.findIndex(x=>x.date===dateISO);
+  const item={date:dateISO,day:{start:day.start||null,breakStart:day.breakStart||null,breakEnd:day.breakEnd||null,end:day.end||null,finalized:!!day.finalized},tzOffsetMinutes:new Date().getTimezoneOffset()*-1,deviceTimestamp:Date.now()};
+  if(idx>=0) out[idx]=item; else out.push(item); saveOutbox(out); gearBadgeRefresh();
+}
+async function trySync(){
+  const cfg=cfgEnsureDefaults(); if(!cfg.syncEnabled||!cfg.syncUrl) return;
+  if(!navigator.onLine){ toast('Offline: sync rimandata'); return; }
+  const out=parseOutbox(); if(out.length===0){ toast('Niente da sincronizzare'); return; }
+  let ok=0;
+  for(const it of out){
+    const headers={'Content-Type':'text/plain;charset=utf-8'}; if(cfg.syncToken) headers['X-Auth']=cfg.syncToken;
+    const r=await fetch(cfg.syncUrl,{method:'POST',headers,body:JSON.stringify({op:'upsert',payload:it})});
+    if(!r.ok){ const txt=await r.text(); throw new Error('HTTP '+r.status+' '+txt.slice(0,120)); }
+    const js=await r.json(); if(js&&js.status==='ok') ok++;
+  }
+  if(ok===out.length){ saveOutbox([]); toast('Sync completata'); }
+  gearBadgeRefresh();
+}
+
+/* ===== UI: oggi ===== */
+function updateOggiUI(){
+  const data=parseLS(); const t=todayLocalISO(); ensureDay(t); const day=data[t];
+  $('#startTime').textContent=day.start||'08:00';
+  $('#breakStartTime').textContent=day.breakStart||'—';
+  $('#breakEndTime').textContent=day.breakEnd||'—';
+  $('#endTime').textContent=day.end||'—';
+  let next='breakStart';
+  if(day.breakStart && !day.breakEnd) next='breakEnd';
+  else if(day.breakStart && day.breakEnd && !day.end) next='end';
+  else if(day.breakStart && day.breakEnd && day.end) next='end';
+  $('#azione').value=next;
+  const {start,breakStart:bs,breakEnd:be,end}=day; const card=$('#oggiSummary');
+  if(start&&bs&&be&&end){
+    const net=(minutesFromHHMM(bs)-minutesFromHHMM(start))+(minutesFromHHMM(end)-minutesFromHHMM(be));
+    $('#oggiNet').textContent=`Lavoro netto: ${hhmmFromMinutes(net)} (prima ${start}–${bs} + dopo ${be}–${end})`;
+    const extra=net-480; const s=extra>=0?'+':'−';
+    $('#oggiExtra').textContent=`Straordinario oggi: ${s}${hhmmFromMinutes(Math.abs(extra))}`; card.hidden=false;
+  } else card.hidden=true;
+}
+/* Tap registra con regola 17:30 */
+function recordAction(){
+  const data=parseLS(); const t=todayLocalISO(); ensureDay(t); const day=data[t]; const cfg=cfgEnsureDefaults(); const now=nowHHMM();
+  if(after1730()){
+    if(!day.breakStart) day.breakStart=cfg.defBreakStart||'12:30';
+    if(!day.breakEnd)   day.breakEnd  =cfg.defBreakEnd||'14:00';
+    day.end=now; day.updatedAt=Date.now(); saveLS(data); queueOutbox(t,day);
+    withFrozenScroll(updateOggiUI); toast('Uscita registrata (post 17:30)'); trySync(); return;
+  }
+  const field=$('#azione').value;
+  if(day[field]){ if(!confirm(`La voce è già impostata su ${day[field]}. Vuoi sovrascrivere con ${now}?`)) return; }
+  day[field]=now; day.updatedAt=Date.now(); saveLS(data); queueOutbox(t,day);
+  if(field==='breakStart') $('#azione').value='breakEnd';
+  if(field==='breakEnd')   $('#azione').value='end';
+  withFrozenScroll(updateOggiUI); toast('Registrato'); trySync();
+}
+
+/* ===== UI: recenti ===== */
+let recentiFromCloud=false;
+const fmtLastCloud=ts=>{ if(!ts) return '—'; const diff=Date.now()-ts; const mins=Math.floor(diff/60000), hrs=Math.floor(mins/60), days=Math.floor(hrs/24);
+  const rel = mins<60 ? `${mins} min fa` : (hrs<48?`${hrs} h fa`:`${days} giorni fa`); const dt=new Date(ts);
+  const dd=String(dt.getDate()).padStart(2,'0'), mm=String(dt.getMonth()+1).padStart(2,'0'), yy=dt.getFullYear();
+  const hh=String(dt.getHours()).padStart(2,'0'), mi=String(dt.getMinutes()).padStart(2,'0'); return `${rel} — ${dd}-${mm}-${yy} ${hh}:${mi}`; };
+async function getMonthMap(ym){
+  const res={}; const [Y,M]=ym.split('-').map(n=>parseInt(n,10)); const days=new Date(Y,M,0).getDate();
+  const local=parseLS(); let mapCloud=null;
+  if(navigator.onLine){ try{ mapCloud=await inbound(()=>fetchCloudLast(370)); }catch(e){ mapCloud=null; } }
+  recentiFromCloud=!!mapCloud;
+  for(let i=1;i<=days;i++){ const iso=`${Y}-${String(M).padStart(2,'0')}-${String(i).padStart(2,'0')}`; res[iso]=(mapCloud&&mapCloud[iso])||local[iso]||{}; }
+  if(mapCloud){ const cfg=cfgEnsureDefaults(); cfg.lastCloudMapAt_ms=Date.now(); saveCFG(cfg); }
+  return res;
+}
+const flagHTMLByExtra=e=>{ const cls=classifyExtra(e);
+  if(cls==='red') return '<span style="color:#FF5C5C">●</span>';
+  if(cls==='green') return '<span style="color:#7DFFA3">✔︎</span>';
+  if(cls==='yellow') return '<span style="color:#FFD65C">●</span>';
+  return '';
+}
+async function updateRecentiUI(){
+  const list=$('#recentiList'); if(!list) return; list.innerHTML='';
+  const ym=ymCurrent(); const map=await getMonthMap(ym); const [Y,M]=ym.split('-').map(n=>parseInt(n,10)); const days=new Date(Y,M,0).getDate();
+  for(let i=1;i<=days;i++){
+    const iso=`${Y}-${String(M).padStart(2,'0')}-${String(i).padStart(2,'0')}`; const wd=new Date(iso+'T00:00:00').getDay(); const rec=map[iso]||{};
+    const extra=computeExtra(rec); const extraStr=(extra===null)?'—':`${extra>=0?'+':'−'}${hhmmFromMinutes(Math.abs(extra))}`; const flag=flagHTMLByExtra(extra);
+    const el=document.createElement('div'); el.className='item'+((wd===0||wd===6)?' weekend':'');
+    el.innerHTML=`<div class="muted">${toEU(iso)} ${weekdayName(wd)}</div><div class="extra">${flag}<span>${extraStr}</span></div><button class="editbtn" data-date="${iso}">Modifica</button>`;
+    el.addEventListener('click',ev=>{ if(ev.target&&ev.target.classList.contains('editbtn')) return; openDayDetail(iso); });
+    el.querySelector('.editbtn').addEventListener('click',ev=>{ ev.stopPropagation(); openDayDetail(iso); });
+    list.appendChild(el);
+  }
+  let total=null; try{ const t=await inbound(()=>monthTotalFromCloud(ym)); if(typeof t==='number') total=t; }catch(e){}
+  if(total===null) total=sumMonthLocal(ym);
+  $('#currentMonthTotal').style.display='grid'; const s=total>=0?'+':'−'; $('#currentMonthTotalValue').textContent=`${s}${hhmmFromMinutes(Math.abs(total))}`;
+  $('#sourceBadge2').textContent=`[${recentiFromCloud?'Cloud':'Locale'}]`;
+  const cfg=cfgEnsureDefaults(); $('#lastCloud2').textContent=fmtLastCloud(cfg.lastCloudMapAt_ms||0);
+  paintStatus();
+}
+
+/* ===== UI: dettaglio giorno ===== */
+function renderDayRows(dateISO){
+  const src=(cloudCacheAll&&cloudCacheAll[dateISO])||parseLS()[dateISO]||{}; const host=$('#dayRows'); host.innerHTML='';
+  [['start','Inizio lavoro',src.start||'—'],['breakStart','Inizio pausa',src.breakStart||'—'],['breakEnd','Fine pausa',src.breakEnd||'—'],['end','Uscita',src.end||'—']]
+  .forEach(([f,l,v])=>{
+    const r=document.createElement('div'); r.className='row';
+    const left=document.createElement('div'); left.textContent=l;
+    const t=document.createElement('div'); t.className='time'; t.textContent=v;
+    const b=document.createElement('button'); b.className='btn ghost'; b.textContent='Modifica';
+    b.addEventListener('click',()=>{ const preset=(v&&v.includes(':'))?v:(f==='start'?(cfgEnsureDefaults().startFixed||'08:00'):'12:00'); openPicker(dateISO,f,preset); });
+    r.appendChild(left); r.appendChild(t); r.appendChild(b); host.appendChild(r);
+  });
+}
+function openDayDetail(d){ $('#dayTitle').textContent=`Giornata ${toEU(d)}`; renderDayRows(d); $('#modalDay').classList.add('show'); $('#modalDay').setAttribute('aria-hidden','false'); }
+function closeDayDetail(){ $('#modalDay').classList.remove('show'); $('#modalDay').setAttribute('aria-hidden','true'); }
+
+/* ===== UI: totale ===== */
+async function updateTotaleUI(){
+  const ym=ymPrev(); const [Y,M]=ym.split('-').map(n=>parseInt(n,10)); const name=`${monthsIt()[M-1]} ${Y}`;
+  $('#lastMonthTitle').textContent=`Totale mese scorso — ${name}`;
+  let total=null; try{ const t=await inbound(()=>monthTotalFromCloud(ym)); if(typeof t==='number'){ total=t; const cfg=cfgEnsureDefaults(); cfg.lastCloudMonthAt_ms=cfg.lastCloudMonthAt_ms||{}; cfg.lastCloudMonthAt_ms[ym]=Date.now(); saveCFG(cfg);} }catch(e){}
+  if(total===null) total=sumMonthLocal(ym);
+  const s=total>=0?'+':'−'; $('#bigTotal').textContent=`${s}${hhmmFromMinutes(Math.abs(total))}`;
+  if(!cloudCacheAll && navigator.onLine){ try{ cloudCacheAll=await inbound(()=>fetchCloudLast(370)); }catch(e){} }
+  const cnt=monthCounts(ym); $('#badgeGreen span').textContent=cnt.green; $('#badgeYellow span').textContent=cnt.yellow; $('#badgeRed span').textContent=cnt.red;
+  const cfg=cfgEnsureDefaults(); const ts=(cfg.lastCloudMonthAt_ms&&cfg.lastCloudMonthAt_ms[ym])||0; $('#lastCloud3').textContent=fmtLastCloud(ts); paintStatus();
+}
+
+/* ===== Month picker ===== */
+function buildMonthOptions(){ const sel=$('#pickMonth'); sel.innerHTML=''; const now=new Date(); const m=monthsIt();
+  for(let i=1;i<=12;i++){ const dt=new Date(now.getFullYear(),now.getMonth()-i,1); const ym=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+    const op=document.createElement('option'); op.value=ym; op.textContent=`${m[dt.getMonth()]} ${dt.getFullYear()}`; sel.appendChild(op); }
+  sel.selectedIndex=0;
+}
+function openMonthPicker(){ withFrozenScroll(()=>{ buildMonthOptions(); $('#modalMonth').classList.add('show'); $('#modalMonth').setAttribute('aria-hidden','false'); }); }
+function closeMonthPicker(){ $('#modalMonth').classList.remove('show'); $('#modalMonth').setAttribute('aria-hidden','true'); }
+async function confirmMonthPicker(){
+  const ym=$('#pickMonth').value; closeMonthPicker(); let total=null; try{ total=await inbound(()=>monthTotalFromCloud(ym)); }catch(e){ total=null; }
+  if(total===null) total=sumMonthLocal(ym);
+  $('#monthResultTitle').textContent=`Totale ${ym}`; const s=total>=0?'+':'−'; $('#monthResultValue').textContent=`${s}${hhmmFromMinutes(Math.abs(total))}`;
+  if(!cloudCacheAll && navigator.onLine){ try{ cloudCacheAll=await inbound(()=>fetchCloudLast(370)); }catch(e){} }
+  const cnt=monthCounts(ym); const spans=$$('#monthResultBadges .badge span'); spans[0].textContent=cnt.green; spans[1].textContent=cnt.yellow; spans[2].textContent=cnt.red;
+  $('#modalMonthResult').classList.add('show'); $('#modalMonthResult').setAttribute('aria-hidden','false');
+}
+document.addEventListener('click',e=>{ if(e.target&&e.target.id==='btnMonthResultClose'){ $('#modalMonthResult').classList.remove('show'); $('#modalMonthResult').setAttribute('aria-hidden','true'); } });
+
+/* ===== Picker orari ===== */
+const picker={field:null,date:null};
+function buildPickerOptions(){ const h=$('#pickHour'), m=$('#pickMin');
+  if(h.options.length===0){ for(let i=0;i<24;i++){ const o=document.createElement('option'); o.value=String(i).padStart(2,'0'); o.textContent=o.value; h.appendChild(o);} }
+  if(m.options.length===0){ for(let i=0;i<60;i++){ const o=document.createElement('option'); o.value=String(i).padStart(2,'0'); o.textContent=o.value; m.appendChild(o);} }
+  h.onchange=updatePickerReadout; m.onchange=updatePickerReadout;
+}
+function updatePickerReadout(){ const hh=$('#pickHour')?.value||'00',mm=$('#pickMin')?.value||'00'; $('#pickerReadout').textContent=`${hh}:${mm}`; }
+function openPicker(dateISO,field,preset){ picker.field=field; picker.date=dateISO; buildPickerOptions(); const [ph,pm]=(preset||'08:00').split(':'); $('#pickHour').value=ph; $('#pickMin').value=pm; updatePickerReadout(); $('#modalPicker').classList.add('show'); $('#modalPicker').setAttribute('aria-hidden','false'); }
+function closePicker(){ $('#modalPicker').classList.remove('show'); $('#modalPicker').setAttribute('aria-hidden','true'); }
+function applyPicker(){ const hh=$('#pickHour').value, mm=$('#pickMin').value; const t=`${hh}:${mm}`; const data=parseLS(); ensureDay(picker.date); const day=data[picker.date]; day[picker.field]=t; day.updatedAt=Date.now(); saveLS(data); queueOutbox(picker.date,day); closePicker(); if(picker.date===todayLocalISO()) withFrozenScroll(updateOggiUI); withFrozenScroll(updateRecentiUI); updateTotaleUI(); toast('Orario aggiornato'); doSync(); }
+
+/* ===== Avvisi offline ===== */
+function offWarnSuppressed(){ const cfg=cfgEnsureDefaults(); const now=Date.now(); if(cfg.offWarnEnabled===false && now < (cfg.offwarn_hard_disable_until_ts||0)) return true; if(now < (cfg.offwarn_snooze_until_ts||0)) return true; return false; }
+function maybeWarnOffline(pageKey){ if(navigator.onLine) return false; if(offWarnSuppressed()) return false; const k=`offwarn_${pageKey}_shown`; if(sessionStorage.getItem(k)==='1') return false; $('#modalOffline').classList.add('show'); $('#modalOffline').setAttribute('aria-hidden','false'); $('#modalOffline').setAttribute('data-page',pageKey); return true; }
+function closeOfflineModal(){ $('#modalOffline').classList.remove('show'); $('#modalOffline').setAttribute('aria-hidden','true'); }
+
+/* ===== Impostazioni & diagnostica ===== */
+function loadSettingsUI(){ const cfg=cfgEnsureDefaults(); $('#cfgSyncEnabled').checked=!!cfg.syncEnabled; $('#cfgSyncUrl').value=cfg.syncUrl||''; $('#cfgSyncToken').value=cfg.syncToken||''; $('#cfgOffWarnEnabled').checked=!!cfg.offWarnEnabled; refreshOffWarnChip(); updateDiagnostics(); }
+function refreshOffWarnChip(){ const cfg=cfgEnsureDefaults(); const now=Date.now(); const chip=$('#offWarnChip'); const btnResume=$('#btnOffWarnResume'); let text='Avvisi attivi';
+  if(cfg.offWarnEnabled===false && now < (cfg.offwarn_hard_disable_until_ts||0)){ text=`Avvisi disattivati fino a ${new Date(cfg.offwarn_hard_disable_until_ts).toLocaleString()}`; btnResume.style.display='inline-block'; }
+  else if(now < (cfg.offwarn_snooze_until_ts||0)){ text=`Avvisi sospesi fino a ${new Date(cfg.offwarn_snooze_until_ts).toLocaleString()}`; btnResume.style.display='inline-block'; }
+  else btnResume.style.display='none'; chip.textContent=text;
+}
+function saveSettings(){ const cfg=cfgEnsureDefaults(); cfg.syncEnabled=$('#cfgSyncEnabled').checked; cfg.syncUrl=$('#cfgSyncUrl').value.trim(); cfg.syncToken=$('#cfgSyncToken').value.trim();
+  const prevEnabled=!!cfg.offWarnEnabled; cfg.offWarnEnabled=$('#cfgOffWarnEnabled').checked; if(prevEnabled && cfg.offWarnEnabled===false){ cfg.offwarn_hard_disable_until_ts=Date.now()+24*60*60*1000; }
+  const now=Date.now(); if(cfg.offWarnEnabled===false && now >= (cfg.offwarn_hard_disable_until_ts||0)) cfg.offWarnEnabled=true;
+  saveCFG(cfg); toast('Impostazioni salvate'); refreshOffWarnChip(); updateDiagnostics();
+}
+function snoozeOffWarn24h(){ const cfg=cfgEnsureDefaults(); cfg.offwarn_snooze_until_ts=Date.now()+24*60*60*1000; saveCFG(cfg); refreshOffWarnChip(); toast('Avvisi offline sospesi per 24h'); }
+function resumeOffWarn(){ const cfg=cfgEnsureDefaults(); cfg.offwarn_snooze_until_ts=0; cfg.offwarn_hard_disable_until_ts=0; cfg.offWarnEnabled=true; saveCFG(cfg); refreshOffWarnChip(); toast('Avvisi offline riattivati'); }
+function updateDiagnostics(err){ const cfg=cfgEnsureDefaults(); const out=parseOutbox(); const now=Date.now();
+  if(cfg.offWarnEnabled===false && now >= (cfg.offwarn_hard_disable_until_ts||0)){ cfg.offWarnEnabled=true; saveCFG(cfg); }
+  const warnState=(cfg.offWarnEnabled===false && now < (cfg.offwarn_hard_disable_until_ts||0))?('disattivati fino a '+new Date(cfg.offwarn_hard_disable_until_ts).toLocaleString()):(now < (cfg.offwarn_snooze_until_ts||0))?('sospesi fino a '+new Date(cfg.offwarn_snooze_until_ts).toLocaleString()):'attivi';
+  const lines=[`Versione app: ${APP_VER}`,`Online: ${navigator.onLine}`,`Endpoint: ${cfg.syncUrl||'(vuoto)'}`,`Token: ${cfg.syncToken?('***('+cfg.syncToken.length+' car.)'):'(vuoto)'}`,`Outbox: ${out.length} elementi`,`Avvisi offline: ${warnState}`]; if(err) lines.push('Ultimo errore: '+err);
+  $('#diagStatus').textContent=lines.join('\n');
+}
+async function testEndpoint(){ const cfg=cfgEnsureDefaults(); const res={};
+  try{ const r1=await fetch(cfg.syncUrl+`?op=ping`); res.ping=await r1.text(); }catch(e){ res.ping='ERRORE: '+String(e); }
+  const ym=ymCurrent(); try{ const r2=await fetch(cfg.syncUrl+`?op=month&ym=${encodeURIComponent(ym)}`); res.month=await r2.text(); }catch(e){ res.month='ERRORE: '+String(e); }
+  $('#diagStatus').textContent += `\n\nTest endpoint:\nPING -> ${res.ping}\nMONTH -> ${res.month}`;
+}
+
+/* ===== Avvio, tabs, handlers ===== */
+let autoSyncRunning=false, lastStartupSyncAt=0;
+async function autoStartupSync(){
+  if(autoSyncRunning) return; autoSyncRunning=true;
+  try{
+    if(navigator.onLine){
+      if(parseOutbox().length>0) await doSync();
+      try{ cloudCacheAll=await inbound(()=>fetchCloudLast(370)); const cfg=cfgEnsureDefaults(); cfg.lastCloudMapAt_ms=Date.now(); saveCFG(cfg);}catch(e){}
+      try{ await inbound(()=>monthTotalFromCloud(ymCurrent())); }catch(e){}
+      try{ const ym=ymPrev(); const t=await inbound(()=>monthTotalFromCloud(ym)); if(typeof t==='number'){ const cfg=cfgEnsureDefaults(); cfg.lastCloudMonthAt_ms=cfg.lastCloudMonthAt_ms||{}; cfg.lastCloudMonthAt_ms[ym]=Date.now(); saveCFG(cfg);} }catch(e){}
+    }
+    updateOggiUI(); updateRecentiUI(); updateTotaleUI(); paintStatus(); lastStartupSyncAt=Date.now();
+  } finally{ autoSyncRunning=false; }
+}
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && Date.now()-lastStartupSyncAt>3*60*1000) autoStartupSync(); });
+window.addEventListener('online',()=>{ if(Date.now()-lastStartupSyncAt>10*60*1000) autoStartupSync(); });
+
+function initTabs(){
+  $$('.tab').forEach(b=>{
+    b.addEventListener('click',()=>{
+      $$('.tab').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+      const t=b.getAttribute('data-target'); $$('.page').forEach(p=>p.classList.remove('visible')); $('#'+t).classList.add('visible');
+      if(t==='page-recenti'){ if(!maybeWarnOffline('recenti')) withFrozenScroll(updateRecentiUI); }
+      if(t==='page-totale'){ if(!maybeWarnOffline('totale')) updateTotaleUI(); }
+      paintStatus();
+    });
+  });
+}
+function eagerSetup(){ cfgEnsureDefaults(); finalizePastDays(); ensureDay(todayLocalISO()); updateOggiUI(); paintStatus(); }
+
+document.addEventListener('DOMContentLoaded',()=>{
+  initTabs(); eagerSetup(); autoStartupSync();
+
+  const gear=$('#btnSettings')||$('.gear'); let tmr=null, long=false;
+  const startPress=()=>{ long=false; tmr=setTimeout(()=>{ long=true; loadSettingsUI(); $('#modalSettings').classList.add('show'); $('#modalSettings').setAttribute('aria-hidden','false'); document.getElementById('diagCard')?.scrollIntoView({behavior:'smooth'}); },600); };
+  const endPress=()=>{ if(tmr) clearTimeout(tmr); if(!long){ loadSettingsUI(); $('#modalSettings').classList.add('show'); $('#modalSettings').setAttribute('aria-hidden','false'); } };
+  if(gear){ gear.addEventListener('touchstart',startPress); gear.addEventListener('mousedown',startPress); gear.addEventListener('touchend',endPress); gear.addEventListener('mouseup',endPress);
+            gear.addEventListener('mouseleave',()=>{ if(tmr) clearTimeout(tmr); }); gear.addEventListener('touchcancel',()=>{ if(tmr) clearTimeout(tmr); }); }
+
+  $('#btnSettingsSave').addEventListener('click',()=>{ saveSettings(); });
+  $('#btnSettingsSync').addEventListener('click',()=>{ saveSettings(); doSync(); });
+  $('#btnSettingsClose').addEventListener('click',()=>{ $('#modalSettings').classList.remove('show'); $('#modalSettings').setAttribute('aria-hidden','true'); });
+  $('#modalSettings').addEventListener('click',(e)=>{ if(e.target.id==='modalSettings'){ $('#modalSettings').classList.remove('show'); $('#modalSettings').setAttribute('aria-hidden','true'); } });
+
+  $('#btnDiagRefresh').addEventListener('click',()=>{ updateDiagnostics(); });
+  $('#btnDiagTest').addEventListener('click',()=>{ testEndpoint(); });
+  $('#btnSnoozeOffWarn').addEventListener('click',()=>{ snoozeOffWarn24h(); });
+  $('#btnOffWarnResume').addEventListener('click',()=>{ resumeOffWarn(); });
+  $('#cfgOffWarnEnabled').addEventListener('change',()=>{ saveSettings(); });
+
+  $$('#rowsOggi .btn.ghost').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const f=btn.getAttribute('data-edit'); const t=todayLocalISO(); const d=parseLS()[t]||{};
+      const cur=(d[f]&&d[f].includes(':'))?d[f]:(f==='start'?(cfgEnsureDefaults().startFixed||'08:00'):'12:00');
+      openPicker(t,f,cur);
+    });
+  });
+  $('#btnRegistra').addEventListener('click',recordAction);
+  $('#btnPickerOk').addEventListener('click',applyPicker);
+  $('#btnPickerCancel').addEventListener('click',closePicker);
+
+  $('#btnDaySetStd').addEventListener('click',()=>{
+    const data=parseLS(); const t=$('#dayTitle').textContent.split(' ').pop(); const [D,M,Y]=t.split('-'); const iso=`${Y}-${M}-${D}`;
+    ensureDay(iso); const day=data[iso]; const cfg=cfgEnsureDefaults();
+    day.breakStart=cfg.defBreakStart||'12:30'; day.breakEnd=cfg.defBreakEnd||'14:00'; day.end=cfg.defEnd||'17:30'; day.updatedAt=Date.now();
+    saveLS(data); queueOutbox(iso,day); renderDayRows(iso); withFrozenScroll(updateRecentiUI); if(iso===todayLocalISO()) updateOggiUI(); toast('Impostati orari standard'); trySync();
+  });
+  $('#btnDayClose').addEventListener('click',()=>{ closeDayDetail(); withFrozenScroll(updateRecentiUI); });
+  $('#modalDay').addEventListener('click',(e)=>{ if(e.target.id==='modalDay'){ closeDayDetail(); withFrozenScroll(updateRecentiUI); } });
+
+  $('#btnVerificaMesi').addEventListener('click',openMonthPicker);
+  $('#btnMonthOk').addEventListener('click',confirmMonthPicker);
+  $('#btnMonthCancel').addEventListener('click',closeMonthPicker);
+  $('#modalMonth').addEventListener('click',(e)=>{ if(e.target.id==='modalMonth'){ closeMonthPicker(); } });
+
+  $('#btnOpenMonthCurrent').addEventListener('click', async ()=>{
+    if(navigator.onLine) await inbound(()=>monthTotalFromCloud(ymCurrent()));
+    $('#monthResultTitle').textContent='Totale mese corrente';
+    $('#monthResultValue').textContent=$('#currentMonthTotalValue').textContent;
+    if(!cloudCacheAll && navigator.onLine){ try{ cloudCacheAll=await inbound(()=>fetchCloudLast(370)); }catch(e){} }
+    const cnt=monthCounts(ymCurrent()); const spans=$$('#monthResultBadges .badge span'); spans[0].textContent=cnt.green; spans[1].textContent=cnt.yellow; spans[2].textContent=cnt.red;
+    $('#modalMonthResult').classList.add('show'); $('#modalMonthResult').setAttribute('aria-hidden','false');
+  });
+
+  $('#btnSyncNowTop').addEventListener('click', async ()=>{
+    let out=parseOutbox(); if(out.length===0){ const t=todayLocalISO(); const data=parseLS(); if(data&&data[t]) queueOutbox(t,data[t]); }
+    out=parseOutbox(); if(out.length===0){ toast('Niente da sincronizzare'); } else { toast('Sync avviata'); await doSync(); }
+    if(navigator.onLine){ try{ cloudCacheAll=await inbound(()=>fetchCloudLast(370)); }catch(e){} } withFrozenScroll(updateRecentiUI);
+  });
+
+  $('#btnOfflineLocal').addEventListener('click',()=>{ const k='offwarn_'+($('#modalOffline').getAttribute('data-page')||'')+'_shown'; if($('#offWarnNoMoreSession').checked) sessionStorage.setItem(k,'1'); closeOfflineModal(); });
+  $('#btnOfflineSettings').addEventListener('click',()=>{ const k='offwarn_'+($('#modalOffline').getAttribute('data-page')||'')+'_shown'; sessionStorage.setItem(k,'1'); closeOfflineModal(); loadSettingsUI(); $('#modalSettings').classList.add('show'); $('#modalSettings').setAttribute('aria-hidden','false'); });
+  $('#btnOfflineRetry').addEventListener('click',async()=>{ if(navigator.onLine){ const k='offwarn_'+($('#modalOffline').getAttribute('data-page')||'')+'_shown'; sessionStorage.setItem(k,'1'); closeOfflineModal(); updateRecentiUI(); updateTotaleUI(); } else toast('Sei ancora offline'); });
+
+  $('#btnRefreshCloud2').addEventListener('click', async ()=>{ if(!navigator.onLine) return; try{ cloudCacheAll=await inbound(()=>fetchCloudLast(370)); const cfg=cfgEnsureDefaults(); cfg.lastCloudMapAt_ms=Date.now(); saveCFG(cfg);}catch(e){} withFrozenScroll(updateRecentiUI); });
+  $('#btnRefreshCloud3').addEventListener('click', async ()=>{ if(!navigator.onLine) return; try{ await inbound(()=>monthTotalFromCloud(ymPrev())); const cfg=cfgEnsureDefaults(); cfg.lastCloudMonthAt_ms=cfg.lastCloudMonthAt_ms||{}; cfg.lastCloudMonthAt_ms[ymPrev()]=Date.now(); saveCFG(cfg);}catch(e){} updateTotaleUI(); });
+
+  // tooltips badge
+  const explain=(k)=>{ if(k==='green') toast('✔︎ Verde: giorni con straordinario >0h e ≤3h'); if(k==='yellow') toast('● Giallo: giorni con straordinario negativo (meno di 8h)'); if(k==='red') toast('● Rosso: giorni con straordinario >3h'); };
+  $('#badgeGreen').addEventListener('click',()=>explain('green'));
+  $('#badgeYellow').addEventListener('click',()=>explain('yellow'));
+  $('#badgeRed').addEventListener('click',()=>explain('red'));
+});
+</script>
 </body>
 </html>
